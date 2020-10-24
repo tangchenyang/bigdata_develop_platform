@@ -1,7 +1,10 @@
 #!/bin/bash
+installer_dir=$(cd `dirname $0`/.. && pwd)
+echo $installer_dir
+exit;
 # init folder
-mkdir -p ~/install_pkg
-mkdir -p ~/software
+mkdir -p ${installer_dir}/install_pkg
+mkdir -p ${installer_dir}/software
 
 # install wget
 yum install wget -y
@@ -13,6 +16,7 @@ yum install vim -y
 rm -rf ~/.ssh
 ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q
 cat ~/.ssh/*.pub > ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+sed -i "s/#   StrictHostKeyChecking ask/   StrictHostKeyChecking no/g" /etc/ssh/ssh_config
 
 # fireware
 systemctl stop firewalld.service
