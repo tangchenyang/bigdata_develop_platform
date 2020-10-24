@@ -1,13 +1,22 @@
 #!/bin/bash
-#yum install vim
+current_dir=$(cd `dirname $0` && pwd)
+echo $current_dir
 
-HADOOP_VERSION="2.9.2"
-wget -P ~/install_pkg http://ftp.cuhk.edu.hk/pub/packages/apache.org/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz
-tar -zxf ~/install_pkg/hadoop-${HADOOP_VERSION}.tar.gz -C ~/software
-mv ~/software/hadoop* ~/software/hadoop-${HADOOP_VERSION}
+. $current_dir/../conf/env.sh
+. $ADMINISTRATOR_HOME/conf/version.properties
+if [ ! -n $COMPONENTS_HOME ]; then
+  echo "COMPONENTS_HOME not found."
+  exit
+fi
+
+tmp_dir=$COMPONENTS_HOME/tmp_install_package
+
+wget -P $tmp_dir $HADOOP_DOWNLOAD_URL
+tar -zxf $tmp_dir/hadoop-${HADOOP_VERSION}.tar.gz -C $COMPONENTS_HOME
+rm -rf $tmp_dir
 
 echo "# hadoop" >> ~/.bash_profile
-echo "export HADOOP_HOME=/root/software/hadoop-${HADOOP_VERSION}" >> ~/.bash_profile
+echo "export HADOOP_HOME=$COMPONENTS_HOME/hadoop-${HADOOP_VERSION}" >> ~/.bash_profile
 echo "export PATH=\$PATH:\$HADOOP_HOME/bin:\$HADOOP_HOME/sbin" >> ~/.bash_profile
 . ~/.bash_profile
 
@@ -143,3 +152,6 @@ EOF
 echo "<<<<<<<<<<<<<<<<< hdfs formath ... >>>>>>>>>>>>>>>>>>>"
 . ~/.bash_profile
 hdfs namenode -format
+
+### start-all
+start-all.sh
