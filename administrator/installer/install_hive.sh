@@ -1,12 +1,24 @@
 #!/bin/bash
 
-HIVE_VERSION=2.3.7
-wget -P ~/install_pkg http://ftp.cuhk.edu.hk/pub/packages/apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz
-tar -zxf ~/install_pkg/*hive* -C ~/software
-mv ~/software/*hive* ~/software/hive-${HIVE_VERSION}
+current_dir=$(cd `dirname $0` && pwd)
+echo $current_dir
+
+. $current_dir/../conf/env.sh
+. $ADMINISTRATOR_HOME/conf/version.properties
+if [ ! -n $COMPONENTS_HOME ]; then
+  echo "COMPONENTS_HOME not found."
+  exit
+fi
+
+tmp_dir=$COMPONENTS_HOME/tmp_install_package
+
+wget -P $tmp_dir $HIVE_DOWNLOAD_URL
+mkdir $COMPONENTS_HOME/hive-${HIVE_VERSION} 
+tar -zxf $tmp_dir/*hive*.tar.gz -C $COMPONENTS_HOME/hive-${HIVE_VERSION} --strip-components 1
+rm -rf $tmp_dir
 
 ### env path
-HIVE_HOME=$(cd ~/software/hive-${HIVE_VERSION} && pwd)
+HIVE_HOME=$(cd $COMPONENTS_HOME/hive-${HIVE_VERSION} && pwd)
 echo "# hive" >> ~/.bash_profile
 echo "export HIVE_HOME=${HIVE_HOME}" >> ~/.bash_profile
 echo "export PATH=\$PATH:\$HIVE_HOME/bin" >> ~/.bash_profile
@@ -39,3 +51,5 @@ hdfs dfs -chmod -R 777 /user/hive/tmp
 hdfs dfs -chmod -R 777 /user/hive/log
 
 schematool -initSchema -dbType mysql
+
+hive --service metastore &
