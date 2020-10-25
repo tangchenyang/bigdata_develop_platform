@@ -1,10 +1,6 @@
 #!/bin/bash
 installer_dir=$(cd `dirname $0`/.. && pwd)
 echo $installer_dir
-exit;
-# init folder
-mkdir -p ${installer_dir}/install_pkg
-mkdir -p ${installer_dir}/software
 
 # install wget
 yum install wget -y
