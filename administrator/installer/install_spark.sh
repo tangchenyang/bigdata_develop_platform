@@ -1,14 +1,24 @@
 #!/bin/bash
 
-SPARK_VERSION=3.0.0
-HOSTNAME="localhost"
-wget -P ~/install_pkg https://mirror.bit.edu.cn/apache/spark/spark-3.0.0/spark-3.0.0-bin-hadoop2.7.tgz
-tar -zxf ~/install_pkg/*spark* -C ~/software
+current_dir=$(cd `dirname $0` && pwd)
+echo $current_dir
 
-mv ~/software/*spark* ~/software/spark-${SPARK_VERSION}
+. $current_dir/../conf/env.sh
+. $ADMINISTRATOR_HOME/conf/version.properties
+if [ ! -n $COMPONENTS_HOME ]; then
+  echo "COMPONENTS_HOME not found."
+  exit
+fi
+
+tmp_dir=$COMPONENTS_HOME/tmp_install_package
+
+wget -P $tmp_dir $SPARK_DOWNLOAD_URL
+mkdir $COMPONENTS_HOME/spark-${SPARK_VERSION}
+tar -zxf $tmp_dir/*spark* -C $COMPONENTS_HOME/spark-${SPARK_VERSION} --strip-components 1
+rm -rf $tmp_dir
 
 ### env path
-SPARK_HOME=$(cd ~/software/spark-${SPARK_VERSION} && pwd)
+SPARK_HOME=$(cd $COMPONENTS_HOME/spark-${SPARK_VERSION} && pwd)
 echo "# spark" >> ~/.bash_profile
 echo "export SPARK_HOME=${SPARK_HOME}" >> ~/.bash_profile
 echo "export PATH=\$PATH:\$SPARK_HOME/bin" >> ~/.bash_profile
