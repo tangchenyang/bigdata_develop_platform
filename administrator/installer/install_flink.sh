@@ -1,14 +1,24 @@
 #!/bin/bash
 
-FLINK_VERSION=1.11.1
-### download
-wget -P ~/install_pkg https://mirrors.bfsu.edu.cn/apache/flink/flink-1.11.1/flink-1.11.1-bin-scala_2.11.tgz
-tar -zxf ~/install_pkg/*flink* -C ~/software
+current_dir=$(cd `dirname $0` && pwd)
+echo $current_dir
 
-mv ~/software/*flink* ~/software/flink-${FLINK_VERSION}
+. $current_dir/../conf/env.sh
+. $ADMINISTRATOR_HOME/conf/version.properties
+if [ ! -n $COMPONENTS_HOME ]; then
+  echo "COMPONENTS_HOME not found."
+  exit
+fi
+
+tmp_dir=$COMPONENTS_HOME/tmp_install_package
+
+wget -P $tmp_dir $FLINK_DOWNLOAD_URL
+mkdir $COMPONENTS_HOME/flink-${FLINK_VERSION}
+tar -zxf $tmp_dir/*flink* -C $COMPONENTS_HOME/flink-${FLINK_VERSION} --strip-components 1
+rm -rf $tmp_dir
 
 ### env path
-FLINK_HOME=$(cd ~/software/flink-${FLINK_VERSION} && pwd)
+FLINK_HOME=$(cd $COMPONENTS_HOME/flink-${FLINK_VERSION} && pwd)
 echo "# flink" >> ~/.bash_profile
 echo "export FLINK_HOME=${FLINK_HOME}" >> ~/.bash_profile
 echo "export PATH=\$PATH:\$FLINK_HOME/bin" >> ~/.bash_profile
