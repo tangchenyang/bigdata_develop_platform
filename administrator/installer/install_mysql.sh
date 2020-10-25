@@ -12,7 +12,7 @@ rm -rf mysql57-community-release-el7-8.noarch.rpm
 
 password=$(grep 'temporary password' /var/log/mysqld.log | awk -F 'root@localhost: ' '{print $2}')
 
-mysql -uroot -p"${password}" << EOF
+mysql --connect-expired-password -uroot -p"${password}" << EOF
 set global validate_password_policy=0;
 set global validate_password_length=6;
 set password for 'root'@'localhost'=password('123456');
