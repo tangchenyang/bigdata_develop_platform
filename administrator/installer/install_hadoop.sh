@@ -22,7 +22,7 @@ echo "export PATH=\$PATH:\$HADOOP_HOME/bin:\$HADOOP_HOME/sbin" >> ~/.bash_profil
 
 HADOOP_HOME=${HADOOP_HOME}
 HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
-HOSTNAME=`hadoop`
+HOSTNAME="hadoop"
 
 ### hadoop-env.sh
 echo "<<<<<<<<<<<<<<<<< modify hadoop-env.sh ... >>>>>>>>>>>>>>>>>>>"
