@@ -1,6 +1,7 @@
-# 请确保您的Linux系统能够连接互联网
-# 建议 Linux 版本为 Centos 7.8 Mini 版本
-# 请确保您的机器安装了git
+# 准备条件
+- 请确保您的Linux系统能够连接互联网
+- 建议 Linux 版本为 Centos 7.8 Mini 版本
+- 请确保您的机器安装了git
 ```
 yum install git -y
 ```
@@ -15,4 +16,15 @@ git clone https://github.com/tangchenyang/bigdata_develop_platform.git
 cd bigdata_develop_platform
 bash administrator/installer/init.sh
 bash administrator/installer/install.sh
+```
+
+# 加载表数据
+```
+source ~/.bash_profile
+spark-sql -f applications/sql/build_table_moutai.sql 
+```
+
+# 查看数据
+```
+spark-sql -e "select * from ods.moutai limit 20"
 ```
