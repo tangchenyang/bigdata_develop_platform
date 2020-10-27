@@ -3,7 +3,7 @@ create database if not exists ods;
 -- create ods.moutai
 drop table if exists ods.moutai;
 create table ods.moutai(
-    trade_date          string  comment "日期", 10/26/2020
+    trade_date          string  comment "日期",
     opening             string  comment "开盘",
     highest             string  comment "最高",
     lowest              string  comment "最低",
