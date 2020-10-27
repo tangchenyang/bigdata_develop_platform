@@ -20,5 +20,5 @@ systemctl disable firewalld.service
 sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
 
 # hostname
-echo 'localhost' > /etc/hostname
-hostname localhost
+echo 'hadoop' > /etc/hostname
+hostname hadoop

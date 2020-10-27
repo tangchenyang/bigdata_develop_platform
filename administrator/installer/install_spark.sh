@@ -43,7 +43,7 @@ cat << EOF >> ${SPARK_CONF_DIR}/hive-site.xml
 <configuration>
   <property>
     <name>hive.metastore.uris</name>
-    <value>thrift://localhost:9083</value>
+    <value>thrift://hadoop:9083</value>
     <description>Thrift URI for the remote metastore. Used by metastore client to connect to remote metastore.</description>
   </property>
 </configuration>

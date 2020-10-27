@@ -24,7 +24,7 @@ echo "export HIVE_HOME=${HIVE_HOME}" >> ~/.bash_profile
 echo "export PATH=\$PATH:\$HIVE_HOME/bin" >> ~/.bash_profile
 . ~/.bash_profile
 HIVE_CONF_DIR=${HIVE_HOME}/conf
-
+HOSTNAME=`hadoop`
 ### hive-site.xml
 cp ${HIVE_CONF_DIR}/hive-default.xml.template ${HIVE_CONF_DIR}/hive-site.xml
 jdbc_url=jdbc:mysql://localhost:3306/hive?createDatabaseIfNotExist=true
