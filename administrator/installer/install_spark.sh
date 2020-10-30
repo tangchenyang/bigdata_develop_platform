@@ -46,5 +46,10 @@ cat << EOF >> ${SPARK_CONF_DIR}/hive-site.xml
     <value>thrift://hadoop:9083</value>
     <description>Thrift URI for the remote metastore. Used by metastore client to connect to remote metastore.</description>
   </property>
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>/user/hive/warehouse</value>
+    <description>location of default database for the warehouse</description>
+  </property>
 </configuration>
 EOF
