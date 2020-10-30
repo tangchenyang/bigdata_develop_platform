@@ -18,13 +18,9 @@ bash administrator/installer/init.sh
 bash administrator/installer/install.sh
 ```
 
-# 加载表数据
+# 运行example
 ```
 source ~/.bash_profile
-spark-sql -f applications/sql/build_table_moutai.sql 
-```
-
-# 查看数据
-```
-spark-sql -e "select * from ods.moutai limit 20"
+source administrator/conf/env.sh
+bash applications/bin/example/example.sh
 ```

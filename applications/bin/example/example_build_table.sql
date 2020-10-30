@@ -1,8 +1,8 @@
 create database if not exists ods;
 
--- create ods.moutai
-drop table if exists ods.moutai;
-create table ods.moutai(
+-- create ods.example_moutai
+drop table if exists ods.example_moutai;
+create table ods.example_moutai(
     trade_date          string  comment "日期",
     opening             string  comment "开盘",
     highest             string  comment "最高",
@@ -21,4 +21,8 @@ row format delimited fields terminated by '|'
 lines terminated by '\n'
 stored as textfile;
 
-load data local inpath '/root/bigdata_develop_platform/applications/data/moutai.csv' into table ods.moutai;
+-- load data
+load data local inpath '${hivevar:app_home}/bin/example/example_moutai.csv' into table ods.example_moutai;
+
+-- select data
+select * from ods.example_moutai limit 20;

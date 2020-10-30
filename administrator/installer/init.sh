@@ -22,3 +22,9 @@ sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config
 # hostname
 echo 'hadoop' > /etc/hostname
 hostname hadoop
+
+ips=$(ip a | grep inet | grep -v inet6 | awk '{print $2}' | awk -F '/' '{print $1}')
+for ip in $ips;
+do
+  echo "$ip hadoop" >> /etc/hosts
+done
