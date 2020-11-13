@@ -6,7 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="bigdata_develop_platform" />
+        <module name="data-example" />
+        <module name="codes" />
       </profile>
     </annotationProcessing>
   </component>

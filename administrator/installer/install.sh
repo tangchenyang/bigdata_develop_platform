@@ -9,3 +9,4 @@ bash install_hive.sh
 bash install_scala.sh
 bash install_spark.sh
 bash install_flink.sh
+bash install_sqoop.sh
