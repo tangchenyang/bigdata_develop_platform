@@ -12,6 +12,8 @@ EOF
 
 hive -e "create database if not exists ods"
 
+uuidgen=`uuidgen`
+tmp_dir="${SQOOP_HOME}/tmp/uuidgen"
 sqoop import \
 --connect jdbc:mysql://hadoop:3306/test_db \
 --username root \
@@ -19,7 +21,10 @@ sqoop import \
 --query 'select name, age from test_db.test_table_person where $CONDITIONS' \
 --hive-import \
 --hive-overwrite \
---hive-table ods.test_person \
+--hive-database ods \
+--hive-table test_person \
 --target-dir /user/hive/wa/ \
 --delete-target-dir \
+--bindir ${tmp_dir} \
+--outdir ${tmp_dir} \
 -m 1
