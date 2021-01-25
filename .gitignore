@@ -3,6 +3,6 @@
 .idea/
 
 ./codes/target
-./codes/base/target
-./codes/example/target
+./codes/base/target/*
+./codes/example/target/*
 ./target
