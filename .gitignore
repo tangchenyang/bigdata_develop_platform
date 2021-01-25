@@ -2,7 +2,7 @@
 !./components/components.md
 .idea/
 
-./codes/target
-./codes/base/target/*
-./codes/example/target/*
-./target
+codes/target
+codes/base/target/*
+codes/example/target/*
+target
