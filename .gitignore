@@ -1,5 +1,5 @@
-./components/*
-!./components/components.md
+components/*
+!components/components.md
 .idea/
 
 codes/target
