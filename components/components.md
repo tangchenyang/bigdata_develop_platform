@@ -1,3 +1,8 @@
+### 开发环境
+- java
+- scala
+- python
+
 ### 数据迁移
 - sqoop
 
