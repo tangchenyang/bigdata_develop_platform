@@ -36,6 +36,7 @@ sed -i "s/org.apache.derby.jdbc.EmbeddedDriver/${jdbc_driver}/g" ${HIVE_CONF_DIR
 sed -i "s/APP/${jdbc_username}/g" ${HIVE_CONF_DIR}/hive-site.xml
 sed -i "s#<value>mine</value>#<value>${jdbc_password}</value>#g" ${HIVE_CONF_DIR}/hive-site.xml
 
+sed -i "s/\&\#8\;/ /g" ${HIVE_CONF_DIR}/hive-site.xml
 sed -i "s#\${system:java.io.tmpdir}#${HIVE_HOME}/temp#g" ${HIVE_CONF_DIR}/hive-site.xml
 sed -i "s#\${system:user.name}#\${user.name}#g" ${HIVE_CONF_DIR}/hive-site.xml
 
