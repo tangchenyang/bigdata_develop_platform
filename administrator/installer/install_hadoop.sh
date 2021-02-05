@@ -125,26 +125,26 @@ cat << EOF >> ${HADOOP_CONF_DIR}/yarn-site.xml
                 <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
                 <value>org.apache.hadoop.mapred.ShuffleHandler</value>
         </property>
-        <property>
-                <name>yarn.resourcemanager.address</name>
-                <value>${HOSTNAME}:8032</value>
-        </property>
-        <property>
-                <name>yarn.resourcemanager.scheduler.address</name>
-                <value>${HOSTNAME}:8030</value>
-        </property>
-        <property>
-                <name>yarn.resourcemanager.resource-tracker.address</name>
-                <value>${HOSTNAME}:8031</value>
-        </property>
-        <property>
-                <name>yarn.resourcemanager.admin.address</name>
-                <value>${HOSTNAME}:8033</value>
-        </property>
-        <property>
-                <name>yarn.resourcemanager.webapp.address</name>
-                <value>${HOSTNAME}:8088</value>
-        </property>
+#        <property>
+#                <name>yarn.resourcemanager.address</name>
+#                <value>${HOSTNAME}:8032</value>
+#        </property>
+#        <property>
+#                <name>yarn.resourcemanager.scheduler.address</name>
+#                <value>${HOSTNAME}:8030</value>
+#        </property>
+#        <property>
+#                <name>yarn.resourcemanager.resource-tracker.address</name>
+#                <value>${HOSTNAME}:8031</value>
+#        </property>
+#        <property>
+#                <name>yarn.resourcemanager.admin.address</name>
+#                <value>${HOSTNAME}:8033</value>
+#        </property>
+#        <property>
+#                <name>yarn.resourcemanager.webapp.address</name>
+#                <value>${HOSTNAME}:8088</value>
+#        </property>
 </configuration>
 EOF
 

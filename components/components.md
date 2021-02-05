@@ -18,3 +18,10 @@
 
 ### SQL 数据库
 - mysql
+
+### 元数据管理框架
+- Atlas 
+
+### 数据可视化
+- Superset
+- Tableau

@@ -16,5 +16,30 @@
         <module>example</module>
     </modules>
 
+    <properties>
+        <scala.version>2.11</scala.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.12</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.12</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.version}</artifactId>
+            <version>3.0.5</version>
+            <scope>test</scope>
+        </dependency>
+
+
+    </dependencies>
 
 </project>
