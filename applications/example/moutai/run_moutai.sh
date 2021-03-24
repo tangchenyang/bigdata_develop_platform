@@ -2,9 +2,7 @@
 
 spark-sql -f sql/build_ods_moutai.sql
 
+jarPath=$APPLICATIONS_HOME/lib
 spark-submit --master yarn --deploy-mode client \
-             --driver-memory 256m \
-             --num-executors 2 \
-             --executor-memory 256m \
-             --executor-cores 2 \
-             --class org.example.moutai.dw.fact.DwFactMoutai
+             --jars $jarPath/base-1.0-SNAPSHOT.jar \
+             --class org.example.moutai.dw.fact.DwFactMoutai jars/example-1.0-SNAPSHOT.jar
