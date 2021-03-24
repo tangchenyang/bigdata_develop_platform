@@ -10,7 +10,7 @@ object SparkSessionUtil {
   def getSparkSession = SparkSession
     .builder
     .config("spark.sql.warehouse.dir", "/user/hive/warehouse")
-    .master("local[*]")
+    .enableHiveSupport()
     .getOrCreate
 
 }
