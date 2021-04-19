@@ -1,12 +1,11 @@
 package org.example.util.spark
 
 import org.apache.spark.sql.Row
-import org.example.util.spark.SparkSessionUtil.getSparkSession
 
 class SparkSessionUtilTest extends org.scalatest.FunSuite {
 
   test("test SparkSession") {
-    val spark = getSparkSession
+    val spark = SparkSessionUtil.sparkSessionOnLocal
     val df = spark.createDataFrame(Seq(
       Student(1,"Tom")
     ))

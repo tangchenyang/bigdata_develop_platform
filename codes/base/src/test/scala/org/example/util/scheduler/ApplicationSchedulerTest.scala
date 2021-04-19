@@ -19,8 +19,22 @@ class ApplicationSchedulerTest extends FunSuite {
 
       override def process(args: Array[String]): Unit = {}
 
+      override val output: Set[Table] = Set(odsTable)
+    }
+
+
+    val dimTable = new DimTable {
+      override val tableName: String = "dim table"
+      override val tableType: TableType = TableType.DIM_TABLE
+    }
+
+    val dimApplication = new DimApplication {
+      override val appName: String = "dim application"
+
+      override def process(args: Array[String]): Unit = { }
+
       override val input: Set[Table] = Set(odsTable)
-      override val output: Set[_ <: Table] = Set(odsTable)
+      override val output: Set[Table] = Set(dimTable)
     }
 
     val factTable = new FactTable {
@@ -33,31 +47,20 @@ class ApplicationSchedulerTest extends FunSuite {
 
       override def process(args: Array[String]): Unit = {}
 
-      override val input: Set[Table] = Set(factTable)
-      override val output: Set[_ <: Table] = Set(factTable)
+      override val input: Set[Table] = Set(odsTable, dimTable)
+      override val output: Set[Table] = Set(factTable)
     }
 
-    val dimTable = new DimTable {
-      override val tableName: String = "dim table"
-      override val tableType: TableType = TableType.DIM_TABLE
-    }
-
-    val dimApplication = new DimApplication {
-      override val appName: String = "dim application"
-
-      override def process(args: Array[String]): Unit = {}
-
-      override val input: Set[Table] = Set(dimTable)
-      override val output: Set[_ <: Table] = Set(dimTable)
-    }
 
 
     ApplicationScheduler.register(odsApplication)
     ApplicationScheduler.register(factApplication)
     ApplicationScheduler.register(dimApplication)
 
-    ApplicationScheduler.appSet.foreach(app => println(app.appName))
-    ApplicationScheduler.printAllDependencies()
+    assert(ApplicationScheduler.appSet.map(_.appName) === Set("ods application","dim application","fact application"))
+    assert(ApplicationScheduler.allInputTables.map(_.tableName) === Set("ods table", "dim table"))
+    assert(ApplicationScheduler.allOutputTables.map(_.tableName) === Set("ods table","dim table","fact table"))
+
   }
 
 }
