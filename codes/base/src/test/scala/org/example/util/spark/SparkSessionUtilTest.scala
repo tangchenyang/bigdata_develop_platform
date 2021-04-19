@@ -1,5 +1,6 @@
 package org.example.util.spark
 
+import org.apache.spark.sql.Row
 import org.example.util.spark.SparkSessionUtil.getSparkSession
 
 class SparkSessionUtilTest extends org.scalatest.FunSuite {
@@ -9,7 +10,9 @@ class SparkSessionUtilTest extends org.scalatest.FunSuite {
     val df = spark.createDataFrame(Seq(
       Student(1,"Tom")
     ))
-    val expected = Seq((1, "Tom"))
+    val expected = Seq(
+      Row(1, "Tom")
+    )
 
     assert(df.collect === expected)
   }

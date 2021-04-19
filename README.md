@@ -22,5 +22,6 @@ bash administrator/installer/install.sh
 ```
 source ~/.bash_profile
 source administrator/conf/env.sh
-bash applications/bin/example/example.sh
+cd applications/bin/example/moutai/
+bash run_moutai.sh
 ```
