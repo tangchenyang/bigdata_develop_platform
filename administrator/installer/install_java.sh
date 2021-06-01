@@ -8,7 +8,7 @@ echo $current_dir
 yum install java-${JAVA_VERSION}* -y
 
 echo "# java" >> ~/.bash_profile
-echo "export JAVA_HOME=/usr/lib/jvm/$(ls /usr/lib/jvm/ | grep openjdk-${JAVA_VERSION})/" >>  ~/.bash_profile
+echo "export JAVA_HOME=/usr/lib/jvm/$(ls /usr/lib/jvm/ | grep java | grep openjdk-${JAVA_VERSION})/" >>  ~/.bash_profile
 echo "export PATH=\$PATH:\$JAVA_HOME/bin" >>  ~/.bash_profile
 . ~/.bash_profile
 java -version
