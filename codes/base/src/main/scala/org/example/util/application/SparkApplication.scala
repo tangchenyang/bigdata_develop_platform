@@ -10,7 +10,7 @@ abstract class SparkApplication {
 
   lazy val spark: SparkSession = SparkSessionUtil.getSparkSession
 
-  val appName: String
+  val appName: String = this.getClass.getSimpleName.replaceAll("\\$", "")
 
   def process(args: Array[String]): Unit
 
@@ -26,5 +26,6 @@ abstract class SparkApplication {
 
 object SparkApplication {
   var launchMode: LaunchMode = defaultLaunchMode
+
   def defaultLaunchMode: LaunchMode = LaunchMode.YARN_CLIENT
 }
