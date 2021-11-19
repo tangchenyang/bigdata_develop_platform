@@ -7,6 +7,6 @@ abstract class Table(
                       val tableDDL: String
                     ) {
 
-  var tableType: TableType
+  val tableType: TableType
 
 }

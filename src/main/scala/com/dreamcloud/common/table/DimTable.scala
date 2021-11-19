@@ -6,5 +6,5 @@ case class DimTable(
                      override val tableName: String,
                      override val tableDDL: String
                    ) extends Table(tableName, tableDDL) {
-  override var tableType: TableType = TableType.DIM_TABLE
+  override val tableType: TableType = TableType.DIM_TABLE
 }

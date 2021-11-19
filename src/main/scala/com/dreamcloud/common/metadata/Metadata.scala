@@ -1,15 +1,20 @@
-package com.dreamcloud.common.scheduler
+package com.dreamcloud.common.metadata
 
 import com.dreamcloud.common.application.SparkApplication
 import com.dreamcloud.common.table.Table
+import org.apache.spark.internal.Logging
 
 import scala.collection.mutable
 
-object ApplicationScheduler {
+/**
+ * record metadata for all project .
+ */
+object Metadata extends Logging{
 
   var appSet: mutable.Set[SparkApplication] = mutable.LinkedHashSet[SparkApplication]()
 
   def register(sparkApplication: SparkApplication): Unit = {
+    logInfo(s"register application ${sparkApplication.appName}")
     appSet = appSet.+(sparkApplication)
   }
 
@@ -22,6 +27,6 @@ object ApplicationScheduler {
   def allOutputTables(): mutable.Set[Table] = {
     appSet
       .filter(_.output != null)
-      .flatMap(x=> x.output)
+      .flatMap(x => x.output)
   }
 }

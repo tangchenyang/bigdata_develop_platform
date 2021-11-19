@@ -1,10 +1,10 @@
-package com.dreamcloud.common.scheduler
+package com.dreamcloud.common.metadata
 
 import com.dreamcloud.common.application.{DimApplication, FactApplication, OdsApplication}
 import com.dreamcloud.common.table.{DimTable, FactTable, OdsTable, Table}
 import org.scalatest.FunSuite
 
-class ApplicationSchedulerTest extends FunSuite {
+class MetadataTest extends FunSuite {
 
   test("test register") {
 
@@ -51,13 +51,13 @@ class ApplicationSchedulerTest extends FunSuite {
     }
 
 
-    ApplicationScheduler.register(odsApplication)
-    ApplicationScheduler.register(factApplication)
-    ApplicationScheduler.register(dimApplication)
+    Metadata.register(odsApplication)
+    Metadata.register(factApplication)
+    Metadata.register(dimApplication)
 
-    assert(ApplicationScheduler.appSet.map(_.appName) === Set("ods application", "dim application", "fact application"))
-    assert(ApplicationScheduler.allInputTables.map(_.tableName) === Set("ods table", "dim table"))
-    assert(ApplicationScheduler.allOutputTables.map(_.tableName) === Set("ods table", "dim table", "fact table"))
+    assert(Metadata.appSet.map(_.appName) === Set("ods application", "dim application", "fact application"))
+    assert(Metadata.allInputTables.map(_.tableName) === Set("ods table", "dim table"))
+    assert(Metadata.allOutputTables.map(_.tableName) === Set("ods table", "dim table", "fact table"))
 
   }
 

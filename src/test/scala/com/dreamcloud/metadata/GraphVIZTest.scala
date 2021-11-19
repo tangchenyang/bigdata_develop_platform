@@ -29,7 +29,7 @@ class GraphVIZTest extends FunSuite {
      * c -> e
      */
 
-    def buildNode(from: String, to: String) = {
+    def buildNode(from: String, to: String): Node = {
       node(from).link(
         Factory.to(node(to)).`with`(attr("weight", 5), Style.DASHED)
       )

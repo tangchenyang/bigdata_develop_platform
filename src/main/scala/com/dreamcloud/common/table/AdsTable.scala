@@ -6,5 +6,5 @@ case class AdsTable(
                      override val tableName: String,
                      override val tableDDL: String
                    ) extends Table(tableName, tableDDL) {
-  override var tableType: TableType = TableType.ADS_TABLE
+  override val tableType: TableType = TableType.ADS_TABLE
 }

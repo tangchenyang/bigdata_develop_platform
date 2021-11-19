@@ -6,7 +6,7 @@ import com.dreamcloud.common.table.Table
 import com.dreamcloud.example.moutai.table.dw.fact.FactTables
 import com.dreamcloud.example.moutai.table.ods.OdsTables
 
-object DwFactMoutai extends FactApplication {
+object DwFactMoutai1 extends FactApplication {
 
   override def process(args: Array[String]): Unit = {
     val odsDf = DataFrameReader(spark).fromHive.table(input.head.tableName)
@@ -15,8 +15,8 @@ object DwFactMoutai extends FactApplication {
 
   override val input: Set[Table] = Set(
     OdsTables.ods_moutai,
-    OdsTables.ods_moutai_1,
-    OdsTables.ods_moutai_2
+    OdsTables.ods_moutai_3,
+    OdsTables.ods_moutai_4
   )
-  override val output: Set[Table] = Set(FactTables.dw_fact_moutai)
+  override val output: Set[Table] = Set(FactTables.dw_fact_moutai_1)
 }

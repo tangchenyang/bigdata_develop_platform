@@ -8,5 +8,8 @@ object FactTables {
     tableName = "dw_fact_moutai",
     tableDDL = "create table dw_fact_moutai () "
   )
-
+  val dw_fact_moutai_1: FactTable = FactTable(
+    tableName = "dw_fact_moutai_1",
+    tableDDL = "create table dw_fact_moutai_1 () "
+  )
 }
