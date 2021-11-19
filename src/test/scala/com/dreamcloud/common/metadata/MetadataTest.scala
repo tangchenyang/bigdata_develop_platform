@@ -1,7 +1,7 @@
 package com.dreamcloud.common.metadata
 
-import com.dreamcloud.common.application.{DimApplication, FactApplication, OdsApplication}
-import com.dreamcloud.common.table.{DimTable, FactTable, OdsTable, Table}
+import com.dreamcloud.common.application.{DimApplication, DwdApplication, OdsApplication}
+import com.dreamcloud.common.table.{DimTable, DwdTable, OdsTable, Table}
 import org.scalatest.FunSuite
 
 class MetadataTest extends FunSuite {
@@ -36,12 +36,12 @@ class MetadataTest extends FunSuite {
       override val output: Set[Table] = Set(dimTable)
     }
 
-    val factTable = FactTable(
+    val factTable = DwdTable(
       tableName = "fact table",
       tableDDL = ""
     )
 
-    val factApplication = new FactApplication {
+    val factApplication = new DwdApplication {
       override val appName: String = "fact application"
 
       override def process(args: Array[String]): Unit = {}

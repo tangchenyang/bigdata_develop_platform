@@ -2,9 +2,9 @@ package com.dreamcloud.common.table
 
 import com.dreamcloud.common.table.TableType.TableType
 
-case class FactTable(
+case class DwdTable(
                       override val tableName: String,
                       override val tableDDL: String
                     ) extends Table(tableName, tableDDL) {
-  override val tableType: TableType = TableType.FACT_TABLE
+  override val tableType: TableType = TableType.DWD_TABLE
 }
