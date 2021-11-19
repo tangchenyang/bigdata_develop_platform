@@ -1,5 +1,10 @@
 package com.dreamcloud.common.table
 
-abstract class DimTable extends Table {
+import com.dreamcloud.common.table.TableType.TableType
 
+case class DimTable(
+                     override val tableName: String,
+                     override val tableDDL: String
+                   ) extends Table(tableName, tableDDL) {
+  override var tableType: TableType = TableType.DIM_TABLE
 }
