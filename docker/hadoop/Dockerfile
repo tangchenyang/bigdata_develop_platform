@@ -32,6 +32,11 @@ RUN sed -i "s/# export HDFS_NAMENODE_USER=hdfs/export HDFS_NAMENODE_USER=root\ne
 # format hdfs
 RUN hdfs namenode -format
 
+# YARN port
+EXPOSE 8088
+# HDFS port
+EXPOSE 9870
+
 ADD bootstrap.sh /root/software/
 
 # start hadoop
