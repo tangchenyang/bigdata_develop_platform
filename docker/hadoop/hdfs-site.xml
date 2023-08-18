@@ -1,0 +1,10 @@
+<configuration>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:/root/software/hadoop-3.3.5/dfs/name</value>
+    </property>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:/root/software/hadoop-3.3.5/dfs/data</value>
+    </property>
+</configuration>
