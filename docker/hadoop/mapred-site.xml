@@ -3,4 +3,20 @@
         <name>mapreduce.framework.name</name>
         <value>yarn</value>
     </property>
+    <property>
+        <name>yarn.app.mapreduce.am.env</name>
+        <value>HADOOP_MAPRED_HOME=/root/software/hadoop-3.3.5</value>
+    </property>
+    <property>
+        <name>mapreduce.map.env</name>
+        <value>HADOOP_MAPRED_HOME=/root/software/hadoop-3.3.5</value>
+    </property>
+    <property>
+        <name>mapreduce.reduce.env</name>
+        <value>HADOOP_MAPRED_HOME=/root/software/hadoop-3.3.5</value>
+    </property>
+    <property>
+        <name>mapreduce.application.classpath</name>
+        <value>/root/software/hadoop-3.3.5/share/hadoop/mapreduce/*:/root/software/hadoop-3.3.5/share/hadoop/mapreduce/lib/*</value>
+    </property>
 </configuration>
