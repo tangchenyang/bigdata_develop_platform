@@ -1,6 +1,6 @@
 # 安装伪分布式Hadoop集群
 ## 手动安装
-参考 `docker/hadoop/Hadoop-Manual-Install.md`
+参考 [docker/hadoop/Hadoop-Manual-Install.md](https://github.com/tangchenyang/bigdata_develop_platform/blob/master/docker/hadoop/Hadoop-Manual-Install.md)
 ## DockerFile 安装
 ### build image
 ```shell
