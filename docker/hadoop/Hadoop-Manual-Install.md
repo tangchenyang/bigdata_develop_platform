@@ -129,7 +129,14 @@ cat << EOF >> ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
         <name>yarn.resourcemanager.resource-tracker.address</name>
         <value>localhost:8031</value>
     </property>
-
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.env-whitelist</name>
+        <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_HOME,PATH,LANG,TZ,HADOOP_MAPRED_HOME</value>
+    </property>
 </configuration>
 EOF
 ```
@@ -142,6 +149,22 @@ cat << EOF >> ${HADOOP_HOME}/etc/hadoop/mapred-site.xml
     <property>
         <name>mapreduce.framework.name</name>
         <value>yarn</value>
+    </property>
+    <property>
+        <name>yarn.app.mapreduce.am.env</name>
+        <value>HADOOP_MAPRED_HOME=/root/software/hadoop-3.3.5</value>
+    </property>
+    <property>
+        <name>mapreduce.map.env</name>
+        <value>HADOOP_MAPRED_HOME=/root/software/hadoop-3.3.5</value>
+    </property>
+    <property>
+        <name>mapreduce.reduce.env</name>
+        <value>HADOOP_MAPRED_HOME=/root/software/hadoop-3.3.5</value>
+    </property>
+    <property>
+        <name>mapreduce.application.classpath</name>
+        <value>/root/software/hadoop-3.3.5/share/hadoop/mapreduce/*:/root/software/hadoop-3.3.5/share/hadoop/mapreduce/lib/*</value>
     </property>
 </configuration>
 EOF
