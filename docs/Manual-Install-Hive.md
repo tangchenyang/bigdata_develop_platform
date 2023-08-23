@@ -1,19 +1,10 @@
 # 安装Hive
-## 安装 postgres
-```shell
-docker pull postgres
-docker run --name postgres -d -p 5432:5432 -e POSTGRES_PASSWORD=123456 postgres
-```
 ## 创建和启动 Hadoop
 参考 [README.md](https://github.com/tangchenyang/bigdata_develop_platform/blob/master/README.md)
 
-```shell
-docker run -itd --privileged --name hadoop -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 3306:3306 hdp:v0.1
-
-```
 启动后进入容器, 之后的操作均在容器内进行
 ```shell
-docker exec -it hadoop bash
+docker exec -it hadoop-manual bash
 ```
 
 ## 安装 MySQL
@@ -73,6 +64,9 @@ sed -i "s/\&\#8\;/ /g" ${HIVE_CONF_DIR}/hive-site.xml
 # 替换系统文件路径
 sed -i "s#\${system:java.io.tmpdir}#${HIVE_HOME}/temp#g" ${HIVE_CONF_DIR}/hive-site.xml
 sed -i "s#\${system:user.name}#\${user.name}#g" ${HIVE_CONF_DIR}/hive-site.xml
+# 关闭 doAs
+sed -i '4821s/true/false/' ${HIVE_CONF_DIR}/hive-site.xml
+
 ```
 ### 添加 JDBC驱动
 ```shell
@@ -92,13 +86,15 @@ hdfs dfs -chmod -R 777 /user/hive/log
 schematool -initSchema -dbType mysql
 ```
 
-## 启动 Hive Metastore
-```shell
-hive --service metastore &
-```
+## 启动 Hive
 ### Embedded CLI
 ```shell
 hive
+```
+### Hive Server 2
+```shell
+hive --service metastore &
+hiveserver2 & 
 ```
 
 ### Beeline

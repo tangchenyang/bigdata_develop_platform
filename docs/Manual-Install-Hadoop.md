@@ -6,12 +6,12 @@ docker pull ubuntu:latest
 
 ## 启动容器
 ```shell
-docker run -itd --privileged -p 9000:9000 -p 50070:50070 -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 3306:3306 --name hadoop ubuntu:latest
+docker run -itd --privileged -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 10000:10000 --name hadoop-manual ubuntu:latest
 ```
 
 ## 进入容器
 ```shell
-docker exec -it hadoop bash
+docker exec -it hadoop-manual bash
 ```
 以下操作均在容器内部
 
@@ -56,7 +56,7 @@ echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile
 ```shell
 wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-3.3.5/hadoop-3.3.5.tar.gz -P /root/install_packages/
 # 下载较慢，可以使用已下载的本地tar包
-# docker cp ./hadoop-3.3.5.tar.gz hadoop://root/install_packages/
+# docker cp ./hadoop-3.3.5.tar.gz hadoop-manual://root/install_packages/
 ```
 
 ### 解压
