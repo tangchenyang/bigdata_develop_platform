@@ -6,7 +6,7 @@ docker pull ubuntu:latest
 
 ## 启动容器
 ```shell
-docker run -itd --privileged -p 9000:9000 -p 50070:50070 -p 9870:9870 -p 8088:8088 -p 4040:4040 --name hadoop ubuntu:latest
+docker run -itd --privileged -p 9000:9000 -p 50070:50070 -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 3306:3306 --name hadoop ubuntu:latest
 ```
 
 ## 进入容器
