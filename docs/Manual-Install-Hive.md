@@ -1,6 +1,6 @@
 # 安装Hive
 ## 创建和启动 Hadoop
-参考 [Manual-Install-Hadoop.md](docs/Manual-Install-Hadoop.md)
+参考 [Manual-Install-Hadoop.md](Manual-Install-Hadoop.md)
 
 启动后进入容器, 之后的操作均在容器内进行
 ```shell

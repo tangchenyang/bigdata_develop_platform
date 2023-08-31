@@ -2,7 +2,7 @@ package com.dreamcloud.metadata
 
 import guru.nidi.graphviz.attribute.Attributes.attr
 import guru.nidi.graphviz.attribute.Color
-import guru.nidi.graphviz.attribute.Rank.RankDir.LEFT_TO_RIGHT
+import guru.nidi.graphviz.attribute.Rank.RankDir
 import guru.nidi.graphviz.model.Factory.{node, to}
 import guru.nidi.graphviz.model.{Factory, Graph, Node}
 import org.scalatest.FunSuite
@@ -47,7 +47,7 @@ class GraphVIZTest extends FunSuite {
 
     //## basic
     val g: Graph = Factory.graph("example1").directed
-      .graphAttr.`with`(Rank.dir(LEFT_TO_RIGHT))
+      .graphAttr.`with`(Rank.dir(RankDir.TOP_TO_BOTTOM))
       .nodeAttr.`with`(Font.name("arial"))
       .linkAttr.`with`("class", "link-class")
       .`with`(
@@ -56,7 +56,7 @@ class GraphVIZTest extends FunSuite {
 
     Graphviz.fromGraph(g)
             .width(2000)
-            .height(1000)
+            .height(3000)
       .render(Format.PNG)
       .toFile(new File("ex1.png"))
   }
