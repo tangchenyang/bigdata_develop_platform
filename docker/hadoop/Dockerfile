@@ -2,7 +2,10 @@ FROM ubuntu:latest
 
 USER root
 # ssh login without password
-RUN apt update && apt install -y openssh-server vim
+RUN sed -i "s@ports.ubuntu.com@mirrors.aliyun.com@g" /etc/apt/sources.list &&  \
+    apt clean  \
+    && apt update
+RUN apt install -y openssh-server vim tree
 RUN /etc/init.d/ssh start &
 RUN ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q && \
     cat ~/.ssh/*.pub > ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && \
