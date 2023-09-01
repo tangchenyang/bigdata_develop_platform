@@ -91,13 +91,26 @@ schematool -initSchema -dbType mysql
 ```shell
 hive
 ```
-### Hive Server 2
+
+### 通过 Thrift 协议访问 MetaStore   
+启动 MetaStore 
 ```shell
 hive --service metastore &
-hiveserver2 & 
+```
+修改 hive-site.xml 启用metastore连接
+```shell
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://localhost:9083</value>
+</property>
 ```
 
-### Beeline
+### Hive Server 2
+启动 HiveServer2
+```shell
+hiveserver2 & 
+```
+Beeline 连接 或 JDBC工具连接
 ```shell
 beeline -u jdbc:hive2://localhost:10000
 ```
