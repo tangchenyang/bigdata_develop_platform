@@ -55,14 +55,23 @@ echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile
 ## 安装 Hadoop
 ### 下载 Hadoop 安装包 
 ```shell
+if [ $(uname -m ) == "aarch64"]; then
+  
+ wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-3.3.5/hadoop-3.3.5-aarch64.tar.gz -P /root/install_packages/
+  
+else then
+ wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-3.3.5/hadoop-3.3.5.tar.gz -P /root/install_packages/
+ 
+  
+fi 
 wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-3.3.5/hadoop-3.3.5.tar.gz -P /root/install_packages/
 # 下载较慢，可以使用已下载的本地tar包
-# docker cp ./hadoop-3.3.5.tar.gz hadoop-manual://root/install_packages/
+# docker cp ./hadoop-3.3.5*.tar.gz hadoop-manual://root/install_packages/
 ```
 
 ### 解压
 ```shell
-tar -zxvf /root/install_packages/hadoop-3.3.5.tar.gz -C /root/software/
+tar -zxvf /root/install_packages/hadoop-3.3.5*.tar.gz -C /root/software/
 ```
 
 ### 配置环境变量
@@ -174,7 +183,7 @@ EOF
 ## 修改 hadoop-env.sh
 ```shell
 sed -i "s/# export HDFS_NAMENODE_USER=hdfs/export HDFS_NAMENODE_USER=root\nexport HDFS_DATANODE_USER=root\nexport HDFS_SECONDARYNAMENODE_USER=root\nexport YARN_NODEMANAGER_USER=root\nexport YARN_RESOURCEMANAGER_USER=root\n/g" ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
-sed -i "s?# export JAVA_HOME=?export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64?g" ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
+sed -i "s?# export JAVA_HOME=?export JAVA_HOME=${JAVA_HOME}?g" ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
 ```
 
 
