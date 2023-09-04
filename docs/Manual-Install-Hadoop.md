@@ -18,7 +18,8 @@ docker exec -it hadoop-manual bash
 # 配置 SSH 免密
 ## 安装SSH服务
 ```shell
-sed -i "s@ports.ubuntu.com@mirrors.aliyun.com@g" /etc/apt/sources.list
+# 国内网络切换 阿里云镜像
+# sed -i "s@ports.ubuntu.com@mirrors.aliyun.com@g" /etc/apt/sources.list
 apt clean && apt update
 apt install -y vim openssh-server 
 /etc/init.d/ssh start
