@@ -20,7 +20,7 @@ docker exec -it elasticsearch bash
 # 国内网络切换 阿里云镜像
 # sed -i "s@ports.ubuntu.com@mirrors.aliyun.com@g" /etc/apt/sources.list
 apt clean && apt update
-apt install -y vim wget sudo
+apt install -y vim wget sudo curl 
 ```
 
 # 安装 Elasticsearch 
