@@ -60,6 +60,7 @@ source /etc/profile
 ## 配置 Kibana
 ```shell
 server.host: 0.0.0.0
+sed -i "s/#server.host: \"localhost\"/server.host: 0.0.0.0/g" $KIBANA_HOME/config/kibana.yml
 ```
 ## 启动
 ```shell

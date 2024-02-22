@@ -6,7 +6,7 @@ docker pull ubuntu:latest
 
 ## 启动容器
 ```shell
-docker run -itd --privileged -p 5601:5601 --name logstash ubuntu:latest
+docker run -itd --privileged -p 5044:5044 --name logstash ubuntu:latest
 ```
 
 ## 进入容器
@@ -20,7 +20,7 @@ docker exec -it logstash bash
 # 国内网络切换 阿里云镜像
 # sed -i "s@ports.ubuntu.com@mirrors.aliyun.com@g" /etc/apt/sources.list
 apt clean && apt update
-apt install -y vim wget 
+apt install -y vim wget curl 
 ```
 
 # 安装 Logstash
@@ -57,7 +57,7 @@ source /etc/profile
 ```
 
 ## 测试Logstash
-#### 通过命令行运行
+### 通过命令行运行
 ```shell
 logstash -e 'input { stdin { } } output { stdout {} }'
 ```
