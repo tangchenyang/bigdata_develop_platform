@@ -62,4 +62,3 @@ yarn application --kill <application_id>
 # FINISHED 时
 yarn application --list --appStates ALL
 ```
----
