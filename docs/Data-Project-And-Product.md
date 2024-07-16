@@ -86,7 +86,7 @@
 数据仓库是诞生比较早的数据平台，广义上来说它不是一种具体的技术，而是一种方法、一套架构。它可以构建在如MySql/Oracle等传统的RDBMS上，也可以构建在如Hadoop、Hive等分布式架构之上。  
 数据仓库主要是针对特定主题的结构化的数据，SQL是主要语言，一般采用维度建模的方式，有清晰完善的层级结构，主要包括ODS层、DW层、ADS层。  
 我们来看一张数据仓库层级图  
-![数据仓库分层](https://github.com/tangchenyang/picx-images-hosting/raw/master/20240716/image.7sn3ntcbjf.webp)  
+![数据仓库分层](https://github.com/tangchenyang/picx-images-hosting/raw/master/20240716/image.1vyjgsxxt0.webp)  
 
 - ODS 层  
 ODS(Operational Data Store)层又称贴源层, 是从外部系统将操作型数据导入平台之后的第一层，保存了操作型数据最原始的状态。  
