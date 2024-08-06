@@ -1,7 +1,17 @@
 # 安装 Spark 集群
-## 安装集群 
-参考 [Manual-Install-Spark.md](docs/Manual-Install-Spark.md)
+## 拉取镜像
+```shell
+docker pull tangchenyang/spark:v1.0
+```
+## 启动容器
+```shell
+docker run -itd --privileged --name hadoop -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 10000:10000 tangchenyang/spark:v1.0
+```
 ## 验证服务
+### 进入容器
+```shell
+docker exec -it hadoop bash
+```
 ### HDFS
 #### HDFS WEB UI
 [http://localhost:9870](http://localhost:9870/)
@@ -21,7 +31,6 @@ ls .
 
 ### MapReduce
 #### MapReduce Job Example
-[WordCount 源码](https://github.com/apache/hadoop/blob/trunk/hadoop-mapreduce-project/hadoop-mapreduce-examples/src/main/java/org/apache/hadoop/examples/WordCount.java)
 ```shell
 
 # 上传测试文件
@@ -36,6 +45,7 @@ hadoop jar ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5
 hdfs dfs -ls /output
 hdfs dfs -cat /output/part-r-00000
 ```
+[点击这里查看 WordCount 源码](https://github.com/apache/hadoop/blob/trunk/hadoop-mapreduce-project/hadoop-mapreduce-examples/src/main/java/org/apache/hadoop/examples/WordCount.java)
 
 ### YARN
 #### YARN WEB UI
@@ -58,6 +68,10 @@ hive -e "CREATE database test_db";
 hive -e "SHOW DATABASES";
 ```
 ### Spark
+#### Spark SQL Example
+```shell
+spark-sql -e "show databases"
+```
 #### Spark Job Example 
 ```shell
 spark-submit \
