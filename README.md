@@ -5,7 +5,7 @@ docker pull tangchenyang/spark:v1.0
 ```
 ## 启动容器
 ```shell
-docker run -itd --privileged --name hadoop -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 10000:10000 tangchenyang/spark:v1.0
+docker run -itd --privileged --name spark -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 10000:10000 tangchenyang/spark:v1.0
 ```
 ## 验证服务
 ### 进入容器
