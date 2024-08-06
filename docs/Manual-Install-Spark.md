@@ -1,7 +1,13 @@
+# 前提条件
+- JDK 1.8
+- Hadoop 
+- Hive
+
 # 创建容器
 ## 拉取ubuntu镜像，启动容器
+备注：此镜像包含Hive + Hadoop 环境
 ```shell
-docker pull ubuntu:latest # todo change to hive image 
+docker pull tangchenyang/hive:v0.1
 ```
 
 ## 启动容器
