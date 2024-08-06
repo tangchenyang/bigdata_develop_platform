@@ -189,7 +189,8 @@ CRM(Custom Relationship Management)系统，是管理客户数据的平台，向
 - 使用场景
   - 营销，销售等领域的客户管理、上下游/供应链管理等
 - 案例:
-  - 纷享销客CRM, Salesforce, Zuora
+  - 纷享销客CRM, Salesforce, Zuora  
+  
 ### DMP 
 DMP(Data Management Platform)，其定位主要是通过标签体系和圈选人群来提供精准投放的服务。   
 - 特点
