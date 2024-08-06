@@ -75,6 +75,19 @@ ADD spark-config/hive-site.xml $SPARK_HOME/conf/hive-site.xml
 ## expose Spark port
 EXPOSE 4040
 
+# setup Sqoop
+## install Sqoop
+RUN wget https://archive.apache.org/dist/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz -P /root/install_packages/ && \
+    tar -zxvf /root/install_packages/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz -C /root/software/ && \
+    rm -f /root/install_packages/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz
+## set env
+ENV SQOOP_HOME /root/software/sqoop-1.4.7.bin__hadoop-2.6.0
+ENV PATH $PATH:$SQOOP_HOME/bin
+## configure Sqoop
+ADD sqoop-config/sqoop-env.sh $SQOOP_HOME/conf/sqoop-env.sh
+RUN wget -P ${SQOOP_HOME}/lib https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar && \
+    wget -P ${SQOOP_HOME}/lib https://jdbc.postgresql.org/download/postgresql-42.5.4.jar
+
 ADD bootstrap.sh /root/software/
 
 # bootstrap

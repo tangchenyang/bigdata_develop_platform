@@ -64,7 +64,7 @@ sqoop list-databases --connect jdbc:mysql://localhost:3306/hive --username root 
 mkdir /root/workspace 
 
 apt update && apt install -y curl 
-curl -XGET 'https://so.gushiwen.cn/gushi/tangshi.aspx' > /root/workspace/tangpoems.html
+curl -XGET 'https://www.gushiwen.cn/gushi/tangshi.aspx' > /root/workspace/tangpoems.html
 cat /root/workspace/tangpoems.html | grep 'shiwenv' | awk -F '<|>' '{print $5","$7}' > /root/workspace/tangpoems.csv
 
 
