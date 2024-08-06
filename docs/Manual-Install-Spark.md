@@ -47,7 +47,7 @@ source /etc/profile
 # 安装 Spark
 ## 下载安装包
 ```shell
-wget https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -P /root/install_packages/
+wget https://mirrors.tuna.tsinghua.edu.cn/apache/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -P /root/install_packages/
 ```
 
 ## 解压

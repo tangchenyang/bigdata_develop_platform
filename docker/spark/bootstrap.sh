@@ -1,10 +1,15 @@
 #!/bin/bash
-bash /root/software/bootstrap.sh
+# start ssh
+/etc/init.d/ssh start &
 
+# start Hadoop
+start-all.sh
+
+# start MySQL
 service mysql start
 
+# start Hive Server
 schematool -initSchema -dbType mysql --verbose
-
 hive --service metastore &
 hiveserver2 &
 
