@@ -10,7 +10,7 @@ docker run -itd --privileged --name spark -p 9870:9870 -p 8088:8088 -p 4040:4040
 ## 验证服务
 ### 进入容器
 ```shell
-docker exec -it hadoop bash
+docker exec -it spark bash
 ```
 ### HDFS
 #### HDFS WEB UI
