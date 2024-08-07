@@ -1,5 +1,4 @@
-# Spark RDD  
-
+# Spark RDD
 ---
 
 ## RDD 简介
