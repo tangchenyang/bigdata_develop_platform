@@ -1,4 +1,8 @@
-# RDD 简介
+# Spark RDD  
+
+--------
+
+## RDD 简介
 RDD(Resilient Distributed Dataset) - 弹性分布式数据集，是 Spark 用来并行操作跨节点数据的主要抽象  
 **RDD的五大特性：**
 1. 一组分区：每个RDD拥有一组partitions, 每个partition将由一个task来处理
@@ -7,7 +11,7 @@ RDD(Resilient Distributed Dataset) - 弹性分布式数据集，是 Spark 用来
 4. 分区器：每个RDD拥有一个Partitioner, 记录了其重新分区的规则
 5. 数据本地性：移动计算优于移动数据，RDD会尽可能让计算task发生在离数据更近的地方
 
-# 创建 RDD
+## 创建 RDD
 创建RDD的方式主要有两种：通过并行化现有的集合创建RDD；或者通过读取外部系统如HDFS等创建RDD  
 本篇文章的后续实践可在 spark-shell 中完成, 其中会默认实例化一个 SparkContext 实例 `sc` 和 SparkSession 实例 `spark`
 ```shell
@@ -45,9 +49,9 @@ rddFromHDFS: org.apache.spark.rdd.RDD[String] = /README.txt MapPartitionsRDD[2] 
 - sequenceFile
 - objectFile  
 
-# Transformation 算子
-## 行级转换
-### map
+## Transformation 算子
+### 基础转换
+#### map
 ```
 scala> val intRDD = sc.range(0, 5)
 intRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[0] at range at <console>:23
@@ -56,7 +60,7 @@ transformedRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[1] at map at <
 scala> transformedRDD.collect
 res0: Array[Long] = Array(0, 2, 4, 6, 8)
 ```
-### filter
+#### filter
 ```
 scala> val intRDD = sc.range(0, 5)
 intRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[0] at range at <console>:23
@@ -65,7 +69,7 @@ filteredRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[1] at filter at <
 scala> filteredRDD.collect
 res0: Array[Long] = Array(0, 1, 2)
 ```
-### flatMap
+#### flatMap
 ```
 scala> val twoDList = List(List(1, 2), List(3, 4))
 twoDList: List[List[Int]] = List(List(1, 2), List(3, 4))
@@ -76,7 +80,7 @@ transformedDF: org.apache.spark.rdd.RDD[Int] = MapPartitionsRDD[1] at flatMap at
 scala> transformedDF.collect
 res0: Array[Int] = Array(2, 4, 6, 8)
 ```
-### sample
+#### sample
 ```
 scala> val rddFromCollection = sc.parallelize(1 to 100)
 rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
@@ -86,45 +90,45 @@ scala> sampleRDD.collect
 res0: Array[Int] = Array(15, 17, 21, 21, 36, 43, 54, 59, 63, 67, 83, 83, 95)
 ```
 
-## 分区级转换
-### mapPartitions
-### mapPartitionsWithIndex
-### cogroup
-### cartesian
-### pipe
+### 分区级转换
+#### mapPartitions
+#### mapPartitionsWithIndex
+#### cogroup
+#### cartesian
+#### pipe
 
-## 集合运算
-### union
-### intersection
-### join
+### 集合运算
+#### union
+#### intersection
+#### join
 
-## 聚合操作
-### groupByKey
-### reduceByKey
-### aggregateByKey
-### sortByKey
-### distinct
+### 聚合操作
+#### groupByKey
+#### reduceByKey
+#### aggregateByKey
+#### sortByKey
+#### distinct
 
-## 控制操作
-### coalesce
-### repartition
-### repartitionAndSortWithinPartitions
+### 控制操作
+#### coalesce
+#### repartition
+#### repartitionAndSortWithinPartitions
 
-# Action 算子
-## 转换为内存集合
-### reduce
-### collect
-### count
-### first
-### take
-### takeSample
-### takeOrdered
-### countByKey
+## Action 算子
+### 转换为内存集合
+#### reduce
+#### collect
+#### count
+#### first
+#### take
+#### takeSample
+#### takeOrdered
+#### countByKey
 
-## 写入外部系统
-### saveAsTextFile
-### saveAsSequenceFile
-### saveAsObjectFile
-### foreach
+### 写入外部系统
+#### saveAsTextFile
+#### saveAsSequenceFile
+#### saveAsObjectFile
+#### foreach
 
-# 广播变量和累加器
+## 广播变量和累加器
