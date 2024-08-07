@@ -1,5 +1,4 @@
 # Spark RDD
----
 
 ## RDD 简介
 RDD(Resilient Distributed Dataset) - 弹性分布式数据集，是 Spark 用来并行操作跨节点数据的主要抽象  
