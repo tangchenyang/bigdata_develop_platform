@@ -167,6 +167,32 @@ transformedDF: org.apache.spark.rdd.RDD[(Int, Int)] = MapPartitionsRDD[1] at key
 scala> transformedDF.collect
 res0: Array[(String, Int)] = Array((odd,1), (even,2), (odd,3), (even,4), (odd,5), (even,6))
 ```
+#### mapValues
+对 K-V Pair 型 RDD 的每一条记录的 values 进行转换  
+*只能作用于 K-V Pair 型 RDD*
+```
+scala> val rdd = sc.parallelize(List("A" -> 1, "B" -> 2))
+rdd: org.apache.spark.rdd.RDD[(String, Int)] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val transformedRDD = rdd.mapValues(_ * 2)
+transformedRDD: org.apache.spark.rdd.RDD[(String, Int)] = MapPartitionsRDD[1] at mapValues at <console>:23
+
+scala> transformedRDD.collect
+res0: Array[(String, Int)] = Array((A,2), (B,4))
+```
+#### flatMapValues
+对K-V Pair 型 RDD RDD的每一条记录中的集合列做转换操作，同时将数组中的元素展开成多行  
+*只能作用于 K-V Pair 型 RDD*  
+``` 
+scala> val rdd = sc.parallelize(List(1 -> List("A", "a"), 2 -> List("B", "b")))
+rdd: org.apache.spark.rdd.RDD[(Int, List[String])] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val transformedRDD = rdd.flatMapValues(l => l.map(_ * 2))
+transformedRDD: org.apache.spark.rdd.RDD[(Int, String)] = MapPartitionsRDD[1] at flatMapValues at <console>:23
+
+scala> transformedRDD.collect
+res0: Array[(Int, String)] = Array((1,AA), (1,aa), (2,BB), (2,bb))
+```
 
 ### 分区转换
 #### mapPartitions
@@ -230,6 +256,8 @@ rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[34] at parallelize
 scala> rdd.repartitio(10).partitions.size
 res0: Int = 10
 ```
+#### partitionBy
+
 
 ### 集合运算
 #### union
@@ -280,7 +308,7 @@ res0: Array[Int] = Array(1, 2)
 ```
 #### join
 将两个RDD 按 Key 关联在一起，返回关联后的RDD, 对于重复 value，会单独出现在不同记录中  
-*只能作用在 K-V Pair 型 RDD 上*  
+*只能作用于 K-V Pair 型 RDD*  
 ``` 
 scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b"))
 rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
@@ -296,7 +324,7 @@ res0: Array[(Int, (String, String))] = Array((1,(a,A)), (2,(b,B)), (2,(b,Bb)))
 ```
 #### cogroup
 将两个RDD按 Key 关联在一起，返回关联后的RDD，相同 Key 的 value 会被 group 到一个集合中  
-*只能作用在 K-V Pair 型 RDD 上*
+*只能作用于 K-V Pair 型 RDD*
 ``` 
 scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b"))
 rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
@@ -310,6 +338,13 @@ cogroupedRDD: org.apache.spark.rdd.RDD[(Int, (Iterable[String], Iterable[String]
 scala> cogroupedRDD.collect
 res0: Array[(Int, (Iterable[String], Iterable[String]))] = Array((1,(CompactBuffer(a),CompactBuffer(A))), (2,(CompactBuffer(b),CompactBuffer(B, Bb))))
 ```
+#### leftOuterJoin
+#### rightOuterJoin
+#### fullOuterJoin
+#### groupWith
+Alias of cogroup for K-V RDD
+#### subtractByKey
+
 #### cartesian
 对两个RDD进行笛卡尔积运算
 ``` 
@@ -370,14 +405,75 @@ res0: Array[(Int, String)] = Array((1,A), (2,B), (3,C), (4,D))
 
 
 ### 聚合操作
-#### aggregate
-``` 
-
+#### groupBy
+对 RDD 按 key 进行分组, 具有相同 key 的记录会被 group 到一起, key 值由用户指定的 record => key 函数决定
 ```
-#### treeAggregate
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val groupedRDD = rdd.groupBy { x => if (x % 2 == 0) "even" else "odd" }
+transformedDF: org.apache.spark.rdd.RDD[(Int, Int)] = MapPartitionsRDD[1] at keyBy at <console>:23
+
+scala> groupedRDD.collect
+res0: Array[(String, Iterable[Int])] = Array((even,CompactBuffer(2, 4, 6)), (odd,CompactBuffer(1, 3, 5)))
+```
 #### groupByKey
+对 RDD 按 key 进行分组, 具有相同 key 的记录会被 group 到一起  
+*只能作用于 K-V Pair 型 RDD*
+```
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val kvRDD = rdd.keyBy { x => if (x % 2 == 0) "even" else "odd" }
+kvRDD: org.apache.spark.rdd.RDD[(String, Int)] = MapPartitionsRDD[1] at keyBy at <console>:23
+
+scala> val groupedRDD = kvRDD.groupByKey()
+groupedRDD: org.apache.spark.rdd.RDD[(String, Iterable[Int])] = ShuffledRDD[2] at groupByKey at <console>:23
+
+scala> groupedRDD.collect
+res0: Array[(String, Iterable[Int])] = Array((even,CompactBuffer(2, 4, 6)), (odd,CompactBuffer(1, 3, 5)))
+```
 #### reduceByKey
+对 RDD 按 key 进行 reduce 操作, 具有相同 key 的记录将按照用户指定的 (left, right) => result 函数从左到右进行合并  
+*只能作用于 K-V Pair 型 RDD*
+```
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val kvRDD = rdd.keyBy { x => if (x % 2 == 0) "even" else "odd" }
+kvRDD: org.apache.spark.rdd.RDD[(String, Int)] = MapPartitionsRDD[1] at keyBy at <console>:23
+
+scala> val reducedRDD = kvRDD.reduceByKey(_ + _)
+reducedRDD: org.apache.spark.rdd.RDD[(String, Int)] = ShuffledRDD[2] at reduceByKey at <console>:23
+
+scala> reducedRDD.collect
+res0: Array[(String, Int)] = Array((even,12), (odd,9))
+```
 #### aggregateByKey
+对 RDD 进行聚合操作，操作分两个阶段，先对单个分区内的数据聚合，再对所有分区聚合结果进行聚合，从而得到最终的聚合结果, 
+它允许返回一个与 RDD 记录类型 V 不同的类型 U, 比如将元素(Int) group 成一个 List  
+因此需要指定一个初始值，和两个聚合函数  
+- zeroValue: U  
+- seqOp: (U, V) => U, 作用在每个分区内数据的聚合函数  
+- combOp: (U, U) => U, 作用在每个分区聚合结果上的聚合函数  
+*只能作用于 K-V Pair 型 RDD* 
+``` 
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val kvRDD = rdd.keyBy { x => if (x % 2 == 0) "even" else "odd" }
+kvRDD: org.apache.spark.rdd.RDD[(String, Int)] = MapPartitionsRDD[1] at keyBy at <console>:23
+
+scala> val aggregatedRDD = kvRDD.aggregateByKey(List[Int]())(_ :+ _, _ ++ _)
+aggregatedRDD: org.apache.spark.rdd.RDD[(Int, List[Int])] = ShuffledRDD[2] at aggregateByKey at <console>:23
+
+scala> aggregatedRDD.collect
+res0: Array[(String, List[Int])] = Array((even,List(2, 4, 6)), (odd,List(1, 3, 5)))
+```
+#### combineByKey
+#### foldByKey
+#### sampleByKey  
+
 
 ### 其他
 #### sortBy
@@ -387,9 +483,16 @@ res0: Array[(Int, String)] = Array((1,A), (2,B), (3,C), (4,D))
 ## Action 算子
 ### 转换为内存集合
 #### reduce
+#### aggregate
+#### treeAggregate
 #### collect
+#### collectAsMap
 #### count
+#### countByKey
 #### countApprox
+#### countByKeyApprox
+#### countApproxDistinctByKey
+
 #### countByValue
 #### countByValueApprox 
 #### countApproxDistinct
@@ -411,6 +514,10 @@ res0: Array[(Int, String)] = Array((1,A), (2,B), (3,C), (4,D))
 #### saveAsSequenceFile
 #### saveAsObjectFile
 #### foreach
+#### saveAsHadoopFile
+#### saveAsNewAPIHadoopFile
+#### saveAsHadoopDataset 
+
 
 ## Control 算子
 ### persist
