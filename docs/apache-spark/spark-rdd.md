@@ -1,5 +1,4 @@
 # Spark RDD
-
 ## RDD 简介
 RDD(Resilient Distributed Dataset) - 弹性分布式数据集，是 Spark 用来并行操作跨节点数据的主要抽象  
 ### RDD的五大特性
@@ -29,7 +28,8 @@ Shuffle 是 Spark 进行数据交换或者说重新分配数据的一种操作�
 ```shell
 spark-shell
 ```
-**并行化现有集合** 
+### 并行化现有集合 
+根据内存中的集合来生成RDD
 ```
 scala> val scalaList = List("A", "B", "C", "D", "E", "F")
 scalaList: List[String] = List(A, B, C, D, E, F)
@@ -43,7 +43,8 @@ res0: Int = 3
 - makeRDD  
 - emptyRDD: no partitions or elements.
 
-**读取外部系统数据**   
+### 读取外部系统数据   
+从外部系统重读取数据来生成RDD
 ``` 
 scala> val rddFromLocalFS = sc.textFile("file:///root/software/spark-3.5.1-bin-hadoop3/README.md")
 rddFromLocalFS: org.apache.spark.rdd.RDD[String] = file:///root/software/spark-3.5.1-bin-hadoop3/README.txt MapPartitionsRDD[0] at textFile at <console>:23
@@ -101,30 +102,39 @@ sampleRDD: org.apache.spark.rdd.RDD[Int] = PartitionwiseSampledRDD[1] at sample 
 scala> sampleRDD.collect
 res0: Array[Int] = Array(15, 17, 21, 21, 36, 43, 54, 59, 63, 67, 83, 83, 95)
 ```
+#### pipe
+```
+scala>  val rddFromCollection = sc.parallelize(1 to 100)
+rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> rddFromCollection.pipe("grep 0").collect
+res0: Array[String] = Array(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+```
 
-### 分区级转换
+### 分区转换
 #### mapPartitions
 #### mapPartitionsWithIndex
-#### cogroup
-#### cartesian
-#### pipe
+#### coalesce
+#### repartition
+#### repartitionAndSortWithinPartitions
 
 ### 集合运算
 #### union
 #### intersection
 #### join
+#### cogroup
+zipWithKey
+#### cartesian
+cross join
 
 ### 聚合操作
 #### groupByKey
 #### reduceByKey
 #### aggregateByKey
+
+### 其他
 #### sortByKey
 #### distinct
 
-### 控制操作
-#### coalesce
-#### repartition
-#### repartitionAndSortWithinPartitions
 
 ## Action 算子
 ### 转换为内存集合
@@ -143,4 +153,10 @@ res0: Array[Int] = Array(15, 17, 21, 21, 36, 43, 54, 59, 63, 67, 83, 83, 95)
 #### saveAsObjectFile
 #### foreach
 
-## 广播变量和累加器
+## Control 算子
+### persist
+### checkpoint
+
+## 全局变量
+### Broadcast
+### Accumulators
