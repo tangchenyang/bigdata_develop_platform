@@ -98,10 +98,10 @@ res0: Array[Long] = Array(0, 1, 2)
 scala> val twoDList = List(List(1, 2), List(3, 4))
 twoDList: List[List[Int]] = List(List(1, 2), List(3, 4))
 
-scala> val rddFromCollection= sc.parallelize(twoDList)
-rddFromCollection: org.apache.spark.rdd.RDD[List[Int]] = ParallelCollectionRDD[0] at parallelize at <console>:24cala> val rddFromCollection= sc.parallelize(twoDList)
+scala> val rdd= sc.parallelize(twoDList)
+rdd: org.apache.spark.rdd.RDD[List[Int]] = ParallelCollectionRDD[0] at parallelize at <console>:24cala> val rdd= sc.parallelize(twoDList)
 
-scala> val transformedDF = rddFromCollection.flatMap(l => l.map(_ * 2))
+scala> val transformedDF = rdd.flatMap(l => l.map(_ * 2))
 transformedDF: org.apache.spark.rdd.RDD[Int] = MapPartitionsRDD[1] at flatMap at <console>:23
 
 scala> transformedDF.collect
@@ -110,10 +110,10 @@ res0: Array[Int] = Array(2, 4, 6, 8)
 #### sample
 对RDD进行采样，返回样本记录, fraction 不代表精确的比例，仅代表每条记录被命中的概率
 ```
-scala> val rddFromCollection = sc.parallelize(1 to 100)
-rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize(1 to 100)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val sampleRDD = rddFromCollection.sample(true, fraction=0.1)
+scala> val sampleRDD = rdd.sample(true, fraction=0.1)
 sampleRDD: org.apache.spark.rdd.RDD[Int] = PartitionwiseSampledRDD[1] at sample at <console>:23
 scala> sampleRDD.collect
 
@@ -122,20 +122,20 @@ res0: Array[Int] = Array(15, 17, 21, 21, 36, 43, 54, 59, 63, 67, 83, 83, 95)
 #### pipe
 对RDD进行操作系统级的管道操作
 ```
-scala> val rddFromCollection = sc.parallelize(1 to 100)
-rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize(1 to 100)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> rddFromCollection.pipe("grep 0").collect
+scala> rdd.pipe("grep 0").collect
 res0: Array[String] = Array(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
 ```
 #### zipWithIndex
 为RDD的每一条记录生成Index, 返回 (record, index) 的元祖  
 其 Index 是根据每个 partition 的 Index 和各个 partition 中每个元素的 index 计算而来，因此产生一个额外的 Job
 ```
-scala> val rddFromCollection = sc.parallelize(1 to 6)
-rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize(1 to 6)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val zippedRDD = rddFromCollection.zipWithIndex
+scala> val zippedRDD = rdd.zipWithIndex
 zippedRDD: org.apache.spark.rdd.RDD[(Int, Long)] = ZippedWithIndexRDD[1] at zipWithIndex at <console>:23
 
 scala> zippedRDD.collect
@@ -146,10 +146,10 @@ res0: Array[(Int, Long)] = Array((1,0), (2,1), (3,2), (4,3), (5,4), (6,5))
 为RDD的每一条记录生成唯一ID, 返回 (record, uniqueId) 的元祖  
 其 uniqueId 是根据 UID = itemIndex * partitionNum + partitionIndex 生成的, 因此不同于 zipWithIndex, 此算子不会产生额外的 Job
 ```
-scala> val rddFromCollection = sc.parallelize(1 to 6, 2)
-rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val zippedRDD = rddFromCollection.zipWithUniqueId
+scala> val zippedRDD = rdd.zipWithUniqueId
 zippedRDD: org.apache.spark.rdd.RDD[(Int, Long)] = MapPartitionsRDD[1] at zipWithUniqueId at <console>:23
 
 scala> zippedRDD.collect
@@ -158,10 +158,10 @@ res0: Array[(Int, Long)] = Array((1,0), (2,2), (3,4), (4,1), (5,3), (6,5))
 #### keyBy
 为RDD的每一条记录生成一个 Key, 返回(key, record) 的元祖，key 由用户指定的 record => key 函数生成
 ```
-scala> val rddFromCollection = sc.parallelize(1 to 6, 2)
-rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val transformedDF = rddFromCollection.keyBy { x => if (x % 2 == 0) "even" else "odd" }
+scala> val transformedDF = rdd.keyBy { x => if (x % 2 == 0) "even" else "odd" }
 transformedDF: org.apache.spark.rdd.RDD[(Int, Int)] = MapPartitionsRDD[1] at keyBy at <console>:23
 
 scala> transformedDF.collect
@@ -172,10 +172,10 @@ res0: Array[(String, Int)] = Array((odd,1), (even,2), (odd,3), (even,4), (odd,5)
 #### mapPartitions
 对RDD的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器，因此这个转换函数应是 迭代器 => 迭代器 的映射
 ```
-scala> val rddFromCollection = sc.parallelize((1 to 6).map(_.toString), 3)
-rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val transformedRDD = rddFromCollection.mapPartitions{ iter => val salt = "abcd_"; iter.map(x=>salt + x) }
+scala> val transformedRDD = rdd.mapPartitions{ iter => val salt = "abcd_"; iter.map(x=>salt + x) }
 transformedRDD: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[1] at mapPartitions at <console>:24
 
 scala> transformedRDD.collect
@@ -184,10 +184,10 @@ res0: Array[String] = Array(abcd_1, abcd_2, abcd_3, abcd_4, abcd_5, abcd_6)
 #### mapPartitionsWithIndex
 对RDD的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器, 并拥有当前 partition 的 Index，因此这个转换函数应是 (partitionIndex, 迭代器) => 迭代器 的映射
 ```
-scala> val rddFromCollection = sc.parallelize((1 to 6).map(_.toString), 3)
-rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val transformedRDD = rddFromCollection.mapPartitionsWithIndex{(idx, iter) => iter.map(x=> s"p_${idx}__${x}")}
+scala> val transformedRDD = rdd.mapPartitionsWithIndex{(idx, iter) => iter.map(x=> s"p_${idx}__${x}")}
 transformedRDD: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[1] at mapPartitionsWithIndex at <console>:23
 
 scala> transformedRDD.collect
@@ -196,11 +196,11 @@ res0: Array[String] = Array(p_0__1, p_0__2, p_1__3, p_1__4, p_2__5, p_2__6)
 #### glom 
 将RDD的每个分区中的所有记录合并成一个Array
 ```
-scala> val rddFromCollection = sc.parallelize((1 to 6).map(_.toString), 3)
-rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val transformedRDD = rddFromCollection.glom
-rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[1] at parallelize at <console>:23
+scala> val transformedRDD = rdd.glom
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[1] at parallelize at <console>:23
 
 scala> transformedRDD.collect
 res0: Array[Array[String]] = Array(Array(1, 2), Array(3, 4), Array(5, 6))
@@ -209,25 +209,25 @@ res0: Array[Array[String]] = Array(Array(1, 2), Array(3, 4), Array(5, 6))
 减少RDD的分区，默认不产生 Shuffle, 当目标分区数大于当前分区数时，将保持当前分区数 
 也可将 shuffle 设置为 true，以得到更多的分区，但是会产生Shuffle, 此场景建议使用 repartition 
 ``` 
-scala> val rddFromCollection = sc.parallelize((1 to 6).map(_.toString), 3)
-rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[34] at parallelize at <console>:23
+scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[34] at parallelize at <console>:23
 
-scala> rddFromCollection.coalesce(2).partitions.size
+scala> rdd.coalesce(2).partitions.size
 res0: Int = 2
 
-scala> rddFromCollection.coalesce(10).partitions.size
+scala> rdd.coalesce(10).partitions.size
 res1: Int = 3
 
-scala> rddFromCollection.coalesce(10, shuffle=true).partitions.size
+scala> rdd.coalesce(10, shuffle=true).partitions.size
 res2: Int = 10
 ```
 #### repartition
 调整RDD的分区到目标数量，会产生Shuffle，即对数据进行重新分布
 ```
-scala> val rddFromCollection = sc.parallelize((1 to 6).map(_.toString), 3)
-rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[34] at parallelize at <console>:23
+scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[34] at parallelize at <console>:23
 
-scala> rddFromCollection.repartitio(10).partitions.size
+scala> rdd.repartitio(10).partitions.size
 res0: Int = 10
 ```
 
@@ -353,15 +353,15 @@ scala> zippedRDD.collect
 res0: Array[(Int, String)] = Array((1,A), (2,B), (3,C), (4,D))
 ```
 #### zipPartitions
-将两个RDD按分区进行 zip, 并按用户给定的 (Iter[A], Iter[B]) => Iter[C] 返回成新的迭代器 
+将两个RDD按分区进行 zip, 并按用户给定的 (Iter[A], Iter[B]) => Iter[C] 函数，在每个partition中返回成新的迭代器 
 ```
-scala> val rdd1FromCollection = sc.parallelize(1 to 4, 2)
-rdd1FromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+scala> val rdd1 = sc.parallelize(1 to 4, 2)
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val rdd2FromCollection = sc.parallelize(List("A", "B", "C", "D"), 2)
-rdd2FromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[1] at parallelize at <console>:23
+scala> val rdd2 = sc.parallelize(List("A", "B", "C", "D"), 2)
+rdd2: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[1] at parallelize at <console>:23
 
-scala> val zippedRDD = rdd1FromCollection.zipPartitions(rdd2FromCollection)((iter1, iter2) => iter1 zip iter2)
+scala> val zippedRDD = rdd1.zipPartitions(rdd2)((iter1, iter2) => iter1 zip iter2)
 zippedRDD: org.apache.spark.rdd.RDD[(Int, String)] = ZippedPartitionsRDD2[2] at zipPartitions at <console>:24
 
 scala> zippedRDD.collect
@@ -371,6 +371,9 @@ res0: Array[(Int, String)] = Array((1,A), (2,B), (3,C), (4,D))
 
 ### 聚合操作
 #### aggregate
+``` 
+
+```
 #### treeAggregate
 #### groupByKey
 #### reduceByKey
