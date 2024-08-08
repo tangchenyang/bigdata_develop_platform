@@ -279,8 +279,8 @@ scala> subtractRDD.collect
 res0: Array[Int] = Array(1, 2)
 ```
 #### join
-将两个RDD 按 Key 关联在一起，返回关联后的RDD, 对于重复 value，会单独出现在不同记录中
-*只能用在 K-V Pair 型 RDD 上*  
+将两个RDD 按 Key 关联在一起，返回关联后的RDD, 对于重复 value，会单独出现在不同记录中  
+*只能作用在 K-V Pair 型 RDD 上*  
 ``` 
 scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b"))
 rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
@@ -295,8 +295,8 @@ scala> joinedRDD.collect
 res0: Array[(Int, (String, String))] = Array((1,(a,A)), (2,(b,B)), (2,(b,Bb)))
 ```
 #### cogroup
-将两个RDD按 Key 关联在一起，返回关联后的RDD，相同 Key 的 value 会被 group 到一个集合中
-只能用在 K-V Pair 型 RDD 上
+将两个RDD按 Key 关联在一起，返回关联后的RDD，相同 Key 的 value 会被 group 到一个集合中  
+*只能作用在 K-V Pair 型 RDD 上*
 ``` 
 scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b"))
 rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
