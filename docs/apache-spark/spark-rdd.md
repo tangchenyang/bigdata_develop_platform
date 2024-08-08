@@ -108,12 +108,12 @@ scala> transformedDF.collect
 res0: Array[Int] = Array(2, 4, 6, 8)
 ```
 #### sample
-对RDD进行采样，返回样本记录
+对RDD进行采样，返回样本记录, fraction 不代表精确的比例，仅代表每条记录被命中的概率
 ```
 scala> val rddFromCollection = sc.parallelize(1 to 100)
 rddFromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> val sampleRDD = rddFromCollection.sample(true, 0.1)
+scala> val sampleRDD = rddFromCollection.sample(true, fraction=0.1)
 sampleRDD: org.apache.spark.rdd.RDD[Int] = PartitionwiseSampledRDD[1] at sample at <console>:23
 scala> sampleRDD.collect
 
@@ -188,10 +188,10 @@ scala> val rddFromCollection = sc.parallelize((1 to 6).map(_.toString), 3)
 rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
 scala> val transformedRDD = rddFromCollection.mapPartitionsWithIndex{(idx, iter) => iter.map(x=> s"p_${idx}__${x}")}
-transformedRDD: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[23] at mapPartitionsWithIndex at <console>:23
+transformedRDD: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[1] at mapPartitionsWithIndex at <console>:23
 
 scala> transformedRDD.collect
-res25: Array[String] = Array(p_0__1, p_0__2, p_1__3, p_1__4, p_2__5, p_2__6)
+res0: Array[String] = Array(p_0__1, p_0__2, p_1__3, p_1__4, p_2__5, p_2__6)
 ```
 #### glom 
 将RDD的每个分区中的所有记录合并成一个Array
@@ -200,10 +200,10 @@ scala> val rddFromCollection = sc.parallelize((1 to 6).map(_.toString), 3)
 rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
 scala> val transformedRDD = rddFromCollection.glom
-rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
+rddFromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[1] at parallelize at <console>:23
 
 scala> transformedRDD.collect
-res39: Array[Array[String]] = Array(Array(1, 2), Array(3, 4), Array(5, 6))
+res0: Array[Array[String]] = Array(Array(1, 2), Array(3, 4), Array(5, 6))
 ```
 #### coalesce
 减少RDD的分区，默认不产生 Shuffle, 当目标分区数大于当前分区数时，将保持当前分区数 
@@ -231,31 +231,138 @@ scala> rddFromCollection.repartitio(10).partitions.size
 res0: Int = 10
 ```
 
-#### repartitionAndSortWithinPartitions
-
 ### 集合运算
 #### union
+对两个RDD求并集
+```
+scala> val rdd1 = sc.parallelize(1 to 5, 2)
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(6 to 10, 2)
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val unionRDD = rdd1.union(rdd2)
+unionRDD: org.apache.spark.rdd.RDD[Int] = UnionRDD[2] at union at <console>:24
+
+scala> unionRDD.collect
+res0: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+```
+
 #### intersection
-#### join
-#### cogroup
-zipWithKey
-#### cartesian
-cross join
-#### randomSplit
-#### randomSampleWithRange
+对两个RDD求交集
+``` 
+scala> val rdd1 = sc.parallelize(1 to 5, 2)
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(3 to 7, 2)
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val intersectionRDD = rdd1.intersection(rdd2)
+unionRDD: org.apache.spark.rdd.RDD[Int] = UnionRDD[2] at union at <console>:24
+
+scala> intersectionRDD.collect
+res0: Array[Int] = Array(4, 3, 5)
+```
 #### subtract
+对RDD求差集, 返回在 rdd1 但不在 rdd2 中的记录
+```
+scala> val rdd1 = sc.parallelize(1 to 5)
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(3 to 7)
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val subtractRDD = rdd1.subtract(rdd2)
+unionRDD: org.apache.spark.rdd.RDD[Int] = MapPartitionsRDD[129] at subtract at <console>:24
+
+scala> subtractRDD.collect
+res0: Array[Int] = Array(1, 2)
+```
+#### join
+将两个RDD 按 Key 关联在一起，返回关联后的RDD, 对于重复 value，会单独出现在不同记录中
+*只能用在 K-V Pair 型 RDD 上*  
+``` 
+scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b"))
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List(1 -> "A", 2 -> "B", 2 -> "Bb"))
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val joinedRDD = rdd1.join(rdd2)
+joinedRDD: org.apache.spark.rdd.RDD[(Int, (String, String))] = MapPartitionsRDD[30] at join at <console>:24
+
+scala> joinedRDD.collect
+res0: Array[(Int, (String, String))] = Array((1,(a,A)), (2,(b,B)), (2,(b,Bb)))
+```
+#### cogroup
+将两个RDD按 Key 关联在一起，返回关联后的RDD，相同 Key 的 value 会被 group 到一个集合中
+只能用在 K-V Pair 型 RDD 上
+``` 
+scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b"))
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List(1 -> "A", 2 -> "B", 2 -> "Bb"))
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val cogroupedRDD = rdd1.cogroup(rdd2)
+cogroupedRDD: org.apache.spark.rdd.RDD[(Int, (Iterable[String], Iterable[String]))] = MapPartitionsRDD[3 at cogroup at <console>:24
+
+scala> cogroupedRDD.collect
+res0: Array[(Int, (Iterable[String], Iterable[String]))] = Array((1,(CompactBuffer(a),CompactBuffer(A))), (2,(CompactBuffer(b),CompactBuffer(B, Bb))))
+```
+#### cartesian
+对两个RDD进行笛卡尔积运算
+``` 
+scala> val rdd1 = sc.parallelize(1 to 3)
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List( "A", "B", "C"))
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val cartesianRDD = rdd1.cartesian(rdd2)
+cartesianRDD: org.apache.spark.rdd.RDD[(Int, String)] = CartesianRDD[2] at cartesian at <console>:24
+
+scala> cartesianRDD.collect
+res0: Array[(Int, String)] = Array((1,A), (1,B), (1,C), (2,A), (2,B), (2,C), (3,A), (3,B), (3,C))
+```
+#### randomSplit
+将RDD切分成一组RDD, 切分成多少组由权重 weights 的数组大小决定, 权重不代表精确的比例，仅代表每条记录被命中的概率
+```
+scala> val rdd = sc.parallelize(1 to 10)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val splitedRDDs = rdd.randomSplit(Array(0.2, 0.2, 0.6))
+splitedRDDs: Array[org.apache.spark.rdd.RDD[Int]] = Array(MapPartitionsRDD[1] at randomSplit at <console>:23, MapPartitionsRDD[98] at randomSplit at <console>:23, MapPartitionsRDD[99] at randomSplit at <console>:23)
+
+scala> splitedRDDs.map(_.collect)
+res0: Array[Array[Int]] = Array(Array(2, 3, 6), Array(5, 7, 9), Array(1, 4, 8, 10))
+```
 #### zip
+将两个RDD按index进行zip, 返回具有相同 index 的 (record1, record2) 的元祖 
+```
+scala> val rdd1 = sc.parallelize(1 to 4, 2)
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List("A", "B", "C", "D"), 2)
+rdd2: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val zippedRDD = rdd1.zip(rdd2)
+zippedRDD: org.apache.spark.rdd.RDD[(Int, String)] = ZippedPartitionsRDD2[2] at zipPartitions at <console>:24
+
+scala> zippedRDD.collect
+res0: Array[(Int, String)] = Array((1,A), (2,B), (3,C), (4,D))
+```
 #### zipPartitions
 将两个RDD按分区进行 zip, 并按用户给定的 (Iter[A], Iter[B]) => Iter[C] 返回成新的迭代器 
 ```
 scala> val rdd1FromCollection = sc.parallelize(1 to 4, 2)
-rdd1FromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[52] at parallelize at <console>:23
+rdd1FromCollection: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
 scala> val rdd2FromCollection = sc.parallelize(List("A", "B", "C", "D"), 2)
-rdd2FromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[53] at parallelize at <console>:23
+rdd2FromCollection: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[1] at parallelize at <console>:23
 
 scala> val zippedRDD = rdd1FromCollection.zipPartitions(rdd2FromCollection)((iter1, iter2) => iter1 zip iter2)
-zippedRDD: org.apache.spark.rdd.RDD[(Int, String)] = ZippedPartitionsRDD2[65] at zipPartitions at <console>:24
+zippedRDD: org.apache.spark.rdd.RDD[(Int, String)] = ZippedPartitionsRDD2[2] at zipPartitions at <console>:24
 
 scala> zippedRDD.collect
 res0: Array[(Int, String)] = Array((1,A), (2,B), (3,C), (4,D))
