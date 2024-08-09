@@ -338,13 +338,76 @@ cogroupedRDD: org.apache.spark.rdd.RDD[(Int, (Iterable[String], Iterable[String]
 scala> cogroupedRDD.collect
 res0: Array[(Int, (Iterable[String], Iterable[String]))] = Array((1,(CompactBuffer(a),CompactBuffer(A))), (2,(CompactBuffer(b),CompactBuffer(B, Bb))))
 ```
-#### leftOuterJoin
-#### rightOuterJoin
-#### fullOuterJoin
 #### groupWith
-Alias of cogroup for K-V RDD
-#### subtractByKey
+[cogroup](#cogroup) 的别名，行为与 cogroup 完全一致
 
+#### leftOuterJoin
+将当前 RDD 与另外的 RDD 进行左关联, 结果集中仅包含左 RDD 中的全部记录，右 RDD 中匹配不到的数据置为空  
+即对于每一条记录 (key, value_left), 能匹配到时返回 (key, (value_left, value_right)), 匹配不到时返回(key, (value_left, None))  
+*只能作用于 K-V Pair 型 RDD*  
+```
+scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b", 3 -> "c"))
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List(1 -> "A", 2 -> "B", 2 -> "Bb", 4 -> "D"))
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val leftJoinedRDD = rdd1.leftOuterJoin(rdd2)
+leftJoinedRDD: org.apache.spark.rdd.RDD[(Int, (String, Option[String]))] = MapPartitionsRDD[4] at leftOuterJoin at <console>:24
+
+scala> leftJoinedRDD.collect
+res0: Array[(Int, (String, Option[String]))] = Array((1,(a,Some(A))), (2,(b,Some(B))), (2,(b,Some(Bb))), (3,(c,None)))
+```
+#### rightOuterJoin
+将当前 RDD 与另外的 RDD 进行右关联, 结果集中仅包含右 RDD 中的全部记录，左 RDD 中匹配不到的数据置为空  
+即对于每一条记录 (key, value_left), 能匹配到时返回 (key, (value_left, value_right)), 匹配不到时返回(key, (None, value_right))  
+*只能作用于 K-V Pair 型 RDD*  
+``` 
+scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b", 3 -> "c"))
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List(1 -> "A", 2 -> "B", 2 -> "Bb", 4 -> "D"))
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val rightJoinedRDD = rdd1.rightOuterJoin(rdd2)
+leftJoinedRDD: org.apache.spark.rdd.RDD[(Int, (String, Option[String]))] = MapPartitionsRDD[4] at leftOuterJoin at <console>:24
+
+scala> rightJoinedRDD.collect
+res0: Array[(Int, (Option[String], String))] = Array((1,(Some(a),A)), (2,(Some(b),B)), (2,(Some(b),Bb)), (4,(None,D)))
+```
+#### fullOuterJoin
+将当前 RDD 与另外的 RDD 进行全关联, 结果集中将包含左右 RDD 中的全部记录，匹配不到的数据置为空
+即对于每一条记录 (key, value_left), 能匹配到时返回 (key, (value_left, value_right)), 匹配不到时返回(key, (value_left, value_right)) 或 (key, (None, value_right))  
+*只能作用于 K-V Pair 型 RDD*  
+``` 
+scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b", 3 -> "c"))
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List(1 -> "A", 2 -> "B", 2 -> "Bb", 4 -> "D"))
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val fullJoinedRDD = rdd1.fullOuterJoin(rdd2)
+leftJoinedRDD: org.apache.spark.rdd.RDD[(Int, (String, Option[String]))] = MapPartitionsRDD[4] at leftOuterJoin at <console>:24
+
+scala> fullJoinedRDD.collect
+res0: Array[(Int, (Option[String], Option[String]))] = Array((1,(Some(a),Some(A))), (2,(Some(b),Some(B))), (2,(Some(b),Some(Bb))), (3,(Some(c),None)), (4,(None,Some(D))))
+```
+#### subtractByKey
+对 K-V Pair 型 RDD 求差集, 返回 key 在 rdd1 但不在 rdd2 中的记录  
+*只能作用于 K-V Pair 型 RDD*
+```
+scala> val rdd1 = sc.parallelize(List(1 -> "a", 2 -> "b", 3 -> "c"))
+rdd1: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val rdd2 = sc.parallelize(List(1 -> "A", 2 -> "B", 2 -> "Bb", 4 -> "D"))
+rdd2: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[1] at parallelize at <console>:23
+
+scala> val subtractedRDD = rdd1.subtractByKey(rdd2)
+subtractedRDD: org.apache.spark.rdd.RDD[(Int, String)] = SubtractedRDD[2] at subtractByKey at <console>:24
+
+scala> subtractedRDD.collect
+res0: Array[(Int, String)] = Array((3,c))
+```
 #### cartesian
 对两个RDD进行笛卡尔积运算
 ``` 
