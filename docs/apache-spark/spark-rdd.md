@@ -74,7 +74,7 @@ rddFromHDFS: org.apache.spark.rdd.RDD[String] = /README.txt MapPartitionsRDD[2] 
 scala> val intRDD = sc.range(0, 5)
 intRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[0] at range at <console>:23
 
-scala>  val transformedRDD = intRDD.map(_ * 2)
+scala> val transformedRDD = intRDD.map(_ * 2)
 transformedRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[1] at map at <console>:23cala> val transformedRDD = intRDD
 
 scala> transformedRDD.collect
@@ -86,7 +86,7 @@ res0: Array[Long] = Array(0, 2, 4, 6, 8)
 scala> val intRDD = sc.range(0, 5)
 intRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[0] at range at <console>:23
 
-scala>  val filteredRDD = intRDD.filter(_ <= 2)
+scala> val filteredRDD = intRDD.filter(_ <= 2)
 filteredRDD: org.apache.spark.rdd.RDD[Long] = MapPartitionsRDD[1] at filter at <console>:23
 
 scala> filteredRDD.collect
@@ -174,7 +174,7 @@ res0: Array[(Int, Long)] = Array((1,0), (2,2), (3,4), (4,1), (5,3), (6,5))
 scala> val rdd = sc.parallelize(1 to 6)
 rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala>  val descSortedRDD = rdd.sortBy(x => x, ascending=false)
+scala> val descSortedRDD = rdd.sortBy(x => x, ascending=false)
 sortedRDD: org.apache.spark.rdd.RDD[Int] = MapPartitionsRDD[1] at sortBy at <console>:23
 
 scala> descSortedRDD.collect
@@ -190,7 +190,7 @@ rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at 
 scala> val kvRDD = rdd.keyBy(x => x)
 sortedRDD: org.apache.spark.rdd.RDD[Int] = MapPartitionsRDD[1] at sortBy at <console>:23
 
-scala>  val ascSortedRDD = kvRDD.sortByKey(ascending=true)
+scala> val ascSortedRDD = kvRDD.sortByKey(ascending=true)
 ascSortedRDD: org.apache.spark.rdd.RDD[(Int, Int)] = ShuffledRDD[2] at sortByKey at <console>:23
 
 scala> ascSortedRDD.collect
@@ -668,7 +668,7 @@ res1: Array[(String, Long)] = Array((A,1213), (B,1213), (C,1213))
 #### reduce
 对 RDD 进行 reduce 操作, 所有记录按照用户指定的 (left, right) => result 函数从左到右进行合并, 返回一个 Java 集合
 ``` 
-scala>  val rdd = sc.parallelize(1 to 6)
+scala> val rdd = sc.parallelize(1 to 6)
 rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
 scala> rdd.reduce(_ + _)
@@ -702,7 +702,7 @@ res0: Int = 21
 - seqOp: (U, V) => U, 作用在每个分区内数据的聚合函数  
 - combOp: (U, U) => U, 作用在每个分区聚合结果上的聚合函数   
 ``` 
-scala>  val rdd = sc.parallelize(1 to 6)
+scala> val rdd = sc.parallelize(1 to 6)
 rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
 scala> rdd.aggregate(0)(_+_, _+_)
