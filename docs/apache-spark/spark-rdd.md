@@ -1,30 +1,30 @@
 # Spark RDD
 ## RDD 简介
-RDD(Resilient Distributed Dataset) - 弹性分布式数据集，是 Spark 用来并行操作跨节点数据的主要抽象  
+RDD(Resilient Distributed Dataset) - 弹性分布式数据集，是 Spark 用来并行操作跨节点数据的主要抽象。
 ### RDD的五大特性
-1. 一组分区：每个RDD拥有一组partitions, 每个partition将由一个task来处理
-2. 数据血缘：每个RDD记录了其依赖关系，可向上追溯父RDD，发生错误时，可从父RDD开始重新计算
-3. 转换函数：每个RDD拥有其转换函数，记录了其是怎样通过父RDD转换而来的
-4. 分区器：每个RDD拥有一个Partitioner, 记录了其重新分区的规则
-5. 数据本地性：移动计算优于移动数据，RDD会尽可能让计算task发生在离数据更近的地方
+1. 一组分区：每个RDD拥有一组partitions, 每个partition将由一个task来处理；
+2. 数据血缘：每个RDD记录了其依赖关系，可向上追溯父RDD，发生错误时，可从父RDD开始重新计算；
+3. 转换函数：每个RDD拥有其转换函数，记录了其是怎样通过父RDD转换而来的；
+4. 分区器：每个RDD拥有一个Partitioner, 记录了其重新分区的规则；
+5. 数据本地性：移动计算优于移动数据，RDD会尽可能让计算task发生在离数据更近的地方。
 ### Shuffle 操作
-Shuffle 是 Spark 进行数据交换或者说重新分配数据的一种操作，这通常会产生跨 Executor 、跨节点，甚至跨机房、跨地区的数据拷贝，因此 Shuffle 操作的成本一来说都比较高  
-只有宽依赖(Wide-Dependency)算子会产生Shuffle, 窄依赖(Narrow-Dependency)算子不会产生Shuffle    
+Shuffle 是 Spark 进行数据交换或者说重新分配数据的一种操作，这通常会产生跨 Executor 、跨节点，甚至跨机房、跨地区的数据拷贝，因此 Shuffle 操作的成本一来说都比较高。  
+只有宽依赖(Wide-Dependency)算子会产生Shuffle, 窄依赖(Narrow-Dependency)算子不会产生Shuffle。    
 
 ![image](https://github.com/tangchenyang/picx-images-hosting/raw/master/20240808/image.5c0w5b3q3u.webp)   
 
 #### 窄依赖  
-父RDD的每一个分区，最多只会被子RDD的一个分区所依赖，这意味着在计算过程中，当前partition中的数据，不需要与其他partitions中的数据进行交互，即可完成计算  
-因为不涉及Shuffle，这类算的的计算速度一般都很快；也以为其一对一的特点，多个相邻的窄依赖算子可以被Chain起来，放在一个Stage中，形成一个优化的流水线
-常见的窄依赖算子有 map, filter, union 等
+父RDD的每一个分区，最多只会被子RDD的一个分区所依赖，这意味着在计算过程中，当前partition中的数据，不需要与其他partitions中的数据进行交互，即可完成计算。  
+因为不涉及Shuffle，这类算的的计算速度一般都很快；也以为其一对一的特点，多个相邻的窄依赖算子可以被Chain起来，放在一个Stage中，形成一个优化的流水线。
+常见的窄依赖算子有 map, filter, union 等。
 #### 宽依赖
-父RDD的每一个分区，会被自RDD的多个分区所依赖, 这意味着当前partition中的数据，会按需(partitioner)被重新分配到子RDD的不同各个partition中，从而产生大规模的数据交换动作  
-因为产生了数据交换，当前的数据流水线(Stage)也将被截断，在数据重新分配之后，开始一个新的数据流水线(Stage)，故而每遇到一个Shuffle算子，都会产生一个新的Stage
-常见的宽依赖算子有 groupByKey, repartition 等
+父RDD的每一个分区，会被自RDD的多个分区所依赖, 这意味着当前partition中的数据，会按需(partitioner)被重新分配到子RDD的不同各个partition中，从而产生大规模的数据交换动作。  
+因为产生了数据交换，当前的数据流水线(Stage)也将被截断，在数据重新分配之后，开始一个新的数据流水线(Stage)，故而每遇到一个Shuffle算子，都会产生一个新的Stage。
+常见的宽依赖算子有 groupByKey, repartition 等。
 
 ## 创建 RDD
-创建RDD的方式主要有两种：通过并行化现有的集合创建RDD；或者通过读取外部系统如HDFS等创建RDD  
-本篇文章的后续实践可在 spark-shell 中完成, 其中会默认实例化一个 SparkContext 实例 `sc` 和 SparkSession 实例 `spark`
+创建RDD的方式主要有两种：通过并行化现有的集合创建 RDD ；或者通过读取外部系统如 HDFS 等创建 RDD。  
+本篇文章的后续实践可在 spark-shell 中完成, 其中会默认实例化一个 SparkContext 实例 `sc` 和 SparkSession 实例 `spark`。
 ```shell
 spark-shell
 ```
@@ -181,7 +181,7 @@ scala> transformedRDD.collect
 res0: Array[(String, Int)] = Array((A,2), (B,4))
 ```
 #### flatMapValues
-对K-V Pair 型 RDD RDD的每一条记录中的集合列做转换操作，同时将数组中的元素展开成多行  
+对 K-V Pair 型 RDD的每一条记录中的集合列做转换操作，同时将数组中的元素展开成多行  
 *只能作用于 K-V Pair 型 RDD*  
 ``` 
 scala> val rdd = sc.parallelize(List(1 -> List("A", "a"), 2 -> List("B", "b")))
@@ -196,7 +196,7 @@ res0: Array[(Int, String)] = Array((1,AA), (1,aa), (2,BB), (2,bb))
 
 ### 分区转换
 #### mapPartitions
-对RDD的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器，因此这个转换函数应是 迭代器 => 迭代器 的映射
+对 RDD 的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器，因此这个转换函数应是 iterator => iterator 的映射
 ```
 scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
 rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
@@ -208,7 +208,7 @@ scala> transformedRDD.collect
 res0: Array[String] = Array(abcd_1, abcd_2, abcd_3, abcd_4, abcd_5, abcd_6)
 ```
 #### mapPartitionsWithIndex
-对RDD的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器, 并拥有当前 partition 的 Index，因此这个转换函数应是 (partitionIndex, 迭代器) => 迭代器 的映射
+对 RDD 的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器, 并拥有当前 partition 的 Index，因此这个转换函数应是 (partitionIndex, iterator) => iterator 的映射
 ```
 scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
 rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
@@ -220,7 +220,7 @@ scala> transformedRDD.collect
 res0: Array[String] = Array(p_0__1, p_0__2, p_1__3, p_1__4, p_2__5, p_2__6)
 ```
 #### glom 
-将RDD的每个分区中的所有记录合并成一个Array
+将 RDD 的每个分区中的所有记录合并成一个 Array
 ```
 scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
 rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
@@ -232,7 +232,7 @@ scala> transformedRDD.collect
 res0: Array[Array[String]] = Array(Array(1, 2), Array(3, 4), Array(5, 6))
 ```
 #### coalesce
-减少RDD的分区，默认不产生 Shuffle, 当目标分区数大于当前分区数时，将保持当前分区数 
+减少 RDD 的分区，默认不产生 Shuffle, 当目标分区数大于当前分区数时，将保持当前分区数 
 也可将 shuffle 设置为 true，以得到更多的分区，但是会产生Shuffle, 此场景建议使用 repartition 
 ``` 
 scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
@@ -248,15 +248,38 @@ scala> rdd.coalesce(10, shuffle=true).partitions.size
 res2: Int = 10
 ```
 #### repartition
-调整RDD的分区到目标数量，会产生Shuffle，即对数据进行重新分布
+调整 RDD 的分区到目标数量，对数据进行随机重新分布，会产生 Shuffle  
 ```
-scala> val rdd = sc.parallelize((1 to 6).map(_.toString), 3)
-rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[34] at parallelize at <console>:23
+scala> val rdd = sc.parallelize(-5 to 10, 2)
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
 
-scala> rdd.repartitio(10).partitions.size
-res0: Int = 10
+scala> val repartitionedRDD = rdd.repartition(3)
+repartitionedRDD: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[65] at repartition at <console>:23
+
+scala> repartitionedRDD.partitions.size
+res0: Int = 3
+
+scala> repartitionedRDD.mapPartitions(iter => Iterator(iter.toList)).collect
+res1: Array[List[String]] = Array(List(-5, -2, 1, 5, 8), List(-4, -1, 2, 3, 6, 9), List(-3, 0, 4, 7, 10))
 ```
 #### partitionBy
+调整 K-V Pair 型 RDD 的分区到目标数量，根据 Key 值对数据进行重新分布，会产生 Shuffle  
+*只能作用于 K-V Pair 型 RDD*
+```
+scala> val rdd = sc.parallelize(-5 to 10, 2)
+rdd: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val kvRDD = rdd.keyBy { x => if (x < 0) "negative number" else "non-negative number" }
+
+scala> val repartitionedRDD = kvRDD.partitionBy(new org.apache.spark.HashPartitioner(3))
+repartitionedRDD: org.apache.spark.rdd.RDD[(String, Int)] = ShuffledRDD[] at partitionBy at <console>:24
+
+scala> repartitionedRDD.partitions.size
+res0: Int = 3
+
+scala> repartitionedRDD.values.mapPartitions(iter => Iterator(iter.toList)).collect
+res1: Array[List[Int]] = Array(List(), List(-5, -4, -3, -2, -1), List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+```
 
 
 ### 集合运算
@@ -481,7 +504,7 @@ scala> groupedRDD.collect
 res0: Array[(String, Iterable[Int])] = Array((even,CompactBuffer(2, 4, 6)), (odd,CompactBuffer(1, 3, 5)))
 ```
 #### groupByKey
-对 RDD 按 key 进行分组, 具有相同 key 的记录会被 group 到一起  
+对 K-V Pair 型 RDD 按 key 进行分组, 具有相同 key 的记录会被 group 到一起  
 *只能作用于 K-V Pair 型 RDD*
 ```
 scala> val rdd = sc.parallelize(1 to 6, 2)
@@ -497,7 +520,7 @@ scala> groupedRDD.collect
 res0: Array[(String, Iterable[Int])] = Array((even,CompactBuffer(2, 4, 6)), (odd,CompactBuffer(1, 3, 5)))
 ```
 #### reduceByKey
-对 RDD 按 key 进行 reduce 操作, 具有相同 key 的记录将按照用户指定的 (left, right) => result 函数从左到右进行合并  
+对 K-V Pair 型 RDD 按 key 进行 reduce 操作, 具有相同 key 的记录将按照用户指定的 (left, right) => result 函数从左到右进行合并  
 *只能作用于 K-V Pair 型 RDD*
 ```
 scala> val rdd = sc.parallelize(1 to 6, 2)
@@ -512,11 +535,29 @@ reducedRDD: org.apache.spark.rdd.RDD[(String, Int)] = ShuffledRDD[2] at reduceBy
 scala> reducedRDD.collect
 res0: Array[(String, Int)] = Array((even,12), (odd,9))
 ```
+#### foldByKey
+对 K-V Pair 型 RDD 按 key 进行合并, 具有相同 key 的记录将按照用户指定的 (left, right) => result 函数从左到右进行合并  
+与 [reduceByKey](#reduceByKey) 的功能很相似，不同的是 foldByKey 允许用户提供一个作用于每个分区的初始值  
+*只能作用于 K-V Pair 型 RDD*
+```
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val kvRDD = rdd.keyBy { x => if (x % 2 == 0) "even" else "odd" }
+kvRDD: org.apache.spark.rdd.RDD[(String, Int)] = MapPartitionsRDD[1] at keyBy at <console>:23
+
+scala> val foldedRDD = kvRDD.foldByKey(0)(_ + _)
+reducedRDD: org.apache.spark.rdd.RDD[(String, Int)] = ShuffledRDD[2] at reduceByKey at <console>:23
+
+scala> foldedRDD.collect
+res0: Array[(String, Int)] = Array((even,12), (odd,9))
+```
+
 #### aggregateByKey
-对 RDD 进行聚合操作，操作分两个阶段，先对单个分区内的数据聚合，再对所有分区聚合结果进行聚合，从而得到最终的聚合结果, 
+对 K-V Pair 型 RDD 进行聚合操作，操作分两个阶段，先对单个分区内的数据聚合，再对所有分区聚合结果进行聚合，从而得到最终的聚合结果, 
 它允许返回一个与 RDD 记录类型 V 不同的类型 U, 比如将元素(Int) group 成一个 List  
 因此需要指定一个初始值，和两个聚合函数  
-- zeroValue: U  
+- zeroValue: U, 作用在每个分区的初始值  
 - seqOp: (U, V) => U, 作用在每个分区内数据的聚合函数  
 - combOp: (U, U) => U, 作用在每个分区聚合结果上的聚合函数  
 *只能作用于 K-V Pair 型 RDD* 
@@ -534,7 +575,27 @@ scala> aggregatedRDD.collect
 res0: Array[(String, List[Int])] = Array((even,List(2, 4, 6)), (odd,List(1, 3, 5)))
 ```
 #### combineByKey
-#### foldByKey
+对 RDD 进行合并操作，与 [aggregateByKey](#aggregateByKey) 类似，操作分两个阶段，先对单个分区内的数据聚合，再对所有分区聚合结果进行聚合，从而得到最终的聚合结果,
+它允许返回一个与 RDD 记录类型 V 不同的类型 U, 比如将元素(Int) group 成一个 List  
+同样需要两个聚合函数，与 [aggregateByKey](#aggregateByKey) 不同的是，combineByKey 不需要指定初始值，但是需要指定一个用来创建初始值的函数, 这个函数的入参将是每个分区的第一个元素  
+- createCombiner: V => U, 用于创建每个分区的初始值  
+- mergeValue: (U, V) => U, 作用在每个分区内数据的聚合函数  
+- mergeCombiners: (U, U) => U, 作用在每个分区聚合结果上的聚合函数   
+*只能作用于 K-V Pair 型 RDD*
+``` 
+scala> val rdd = sc.parallelize(1 to 6, 2)
+rdd: org.apache.spark.rdd.RDD[Int] = ParallelCollectionRDD[0] at parallelize at <console>:23
+
+scala> val kvRDD = rdd.keyBy { x => if (x % 2 == 0) "even" else "odd" }
+kvRDD: org.apache.spark.rdd.RDD[(String, Int)] = MapPartitionsRDD[1] at keyBy at <console>:23
+
+scala> val combinedRDD = kvRDD.combineByKey[List[Int]]((x: Int) => List[Int](x), (l: List[Int], i: Int) => l :+ i,(l1: List[Int], l2: List[Int]) => l1 ++ l2)
+combinedRDD: org.apache.spark.rdd.RDD[(String, List[Int])] = ShuffledRDD[2] at combineByKey at <console>:23
+
+scala> combinedRDD.collect
+res0: Array[(String, List[Int])] = Array((even,List(2, 4, 6)), (odd,List(1, 3, 5)))
+```
+
 #### sampleByKey  
 
 
