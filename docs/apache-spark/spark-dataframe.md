@@ -221,9 +221,41 @@ scala> df.toDF("name", "id").show
 |   2|  B|
 +----+---+
 ```
-#### unpivot
+#### unpivot 
+列转行, 将 DataFrame 的每条记录的每一列转为单独的行  
+```  
+scala> case class Person(id: Int, name: String, age: Int)
+defined class Person
+
+scala> val persons = List(Person(1, "Tom", 30), Person(2, "Jerry", 28))
+persons: List[Person] = List(Person(1,Tom,30), Person(2,Jerry,28))
+
+scala> val df = spark.createDataFrame(persons)
+df: org.apache.spark.sql.DataFrame = [id: int, name: string ... 1 more field]
+
+scala> df.show
++---+-----+---+
+| id| name|age|
++---+-----+---+
+|  1|  Tom| 30|
+|  2|Jerry| 28|
++---+-----+---+
+
+scala> val unpivotedDF = df.unpivot(ids=Array(df("id")), values=Array(df("name"), df("age").cast("string")), variableColumnName="k", valueColumnName="v")
+unpivotedDF: org.apache.spark.sql.DataFrame = [id: int, k: string ... 1 more field]
+
+scala> unpivotedDF.show
++---+----+-----+
+| id|   k|    v|
++---+----+-----+
+|  1|name|  Tom|
+|  1| age|   30|
+|  2|name|Jerry|
+|  2| age|   28|
++---+----+-----+
+```
 #### melt
-#### observe
+与 [unpivot](#unpivot-) 语义一致  
 #### explode 将弃用
 #### withColumn
 #### withColumnRenamed
