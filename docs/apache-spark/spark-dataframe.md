@@ -168,7 +168,7 @@ scala> df.sort(df("id").desc).show()
 +---+----+
 ```
 #### orderBy
-与 [orderBy](#orderby) 行为一致，提供与 SQL 语义一致的同名算子  
+与 [sort](#sort) 行为一致，提供与 SQL 语义一致的同名算子  
 
 #### na
 #### stat
@@ -225,8 +225,6 @@ scala> df.toDF("name", "id").show
 列转行, 将 DataFrame 的每条记录的每一列转为单独的行  
 ```  
 scala> case class Person(id: Int, name: String, age: Int)
-defined class Person
-
 scala> val persons = List(Person(1, "Tom", 30), Person(2, "Jerry", 28))
 persons: List[Person] = List(Person(1,Tom,30), Person(2,Jerry,28))
 
@@ -383,14 +381,224 @@ scala> df.toJSON.show
 
 ### 分区转换
 #### sortWithinPartitions
+对每个 Partition 中的数据进行排序，与 SQL 中的 `sort by` 语义一致 
+
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val persons = (1 to 6).toList.map(x => Row(x, "Name" + x))
+persons: List[Person] = List(Person(1,Name1), Person(2,Name2), Person(3,Name3), Person(4,Name4), Person(5,Name5), Person(6,Name6))
+
+scala> val df = sc.parallelize(persons, 2).toDF
+df: org.apache.spark.sql.DataFrame = [id: int, name: string ... 1 more field]
+
+scala> val sortedDF = df.sortWithinPartitions(df("id").desc)
+sortedDF: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [id: int, name: string]
+
+scala> sortedDF.show
++---+-----+
+| id| name|
++---+-----+
+|  3|Name3|
+|  2|Name2|
+|  1|Name1|
+|  6|Name6|
+|  5|Name5|
+|  4|Name4|
++---+-----+
+
+scala> sortedDF.rdd.glom.collect
+res0: Array[Array[org.apache.spark.sql.Row]] = Array(Array([3,Name3], [2,Name2], [1,Name1]), Array([6,Name6], [5,Name5], [4,Name4]))
+```
 #### mapPartitions
+对 DataFrame 的每一个分区做转换操作，每个分区中的记录被封装成一个迭代器，因此这个转换函数应是 iterator => iterator 的映射
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df =  spark.createDataFrame((1 to 6).toList.map(x => Person(x, "Name" + x)))
+df: org.apache.spark.sql.DataFrame = [id: int, name: string ... 1 more field]
+
+scala> val transformed = df.mapPartitions{ iter => val salt = "abcd_"; iter.map( row => salt + row.getAs("name")) }
+transformed: org.apache.spark.sql.Dataset[String] = [value: string]
+
+scala> transformed.show
++----------+
+|     value|
++----------+
+|abcd_Name1|
+|abcd_Name2|
+|abcd_Name3|
+|abcd_Name4|
+|abcd_Name5|
+|abcd_Name6|
++----------+
+```
+
 #### repartition
+调整 DataFrame 的分区到目标数量，与 [RDD - repartition](spark-rdd.md#repartition) 的行为一致  
+#### coalesce
+减少 DataFrame 的分区到目标数量，与 [RDD - coalesce](spark-rdd.md#coalesce) 的行为一致
 #### repartitionByRange
-#### coalesce 
+todo 
+
+
 
 ### 集合运算
 #### join
-#### crossJoin 
+将当前 DataFrame 与另一个 DataFrame 关联，需要自定关联类型，默认为 Inner
+##### Inner Join
+将当前 DataFrame 与另外的 DataFrame 进行内关联, 结果集中仅包含左右 DataFrame 中的能匹配上的记录, 相同关联键存在重复数据时，将返回其笛卡尔积   
+joinType 为 `inner` 即表示 Inner Join
+```
+scala> case class Person(id: Int, name: String)
+
+scala> val df1 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(3, "Name3")))
+df1: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> val df2 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name22"), Person(4, "Name4")))
+
+scala> df1.join(df2, "id", joinType="inner").show
++---+-----+------+
+| id| name|  name|
++---+-----+------+
+|  1|Name1| Name1|
+|  2|Name2| Name2|
+|  2|Name2|Name22|
++---+-----+------+
+
+scala> df1.join(df2, df1("id") === df2("id")).show
++---+-----+---+------+
+| id| name| id|  name|
++---+-----+---+------+
+|  1|Name1|  1| Name1|
+|  2|Name2|  2| Name2|
+|  2|Name2|  2|Name22|
++---+-----+---+------+
+```
+
+##### Full Join
+将当前 DataFrame 与另外的 DataFrame 进行全关联, 结果集中将包含左右 DataFrame 中的全部记录，匹配不到的数据置为空  
+joinType 为 `outer`, `full`, `fullouter`, `full_outer` 均表示 Full Join  
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df1 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(3, "Name3")))
+df1: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> val df2 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name22"), Person(4, "Name4")))
+
+scala> df1.join(df2, "id", joinType="full").show
++---+-----+------+
+| id| name|  name|
++---+-----+------+
+|  1|Name1| Name1|
+|  2|Name2| Name2|
+|  2|Name2|Name22|
+|  3|Name3|  NULL|
+|  4| NULL| Name4|
++---+-----+------+
+```
+##### Left Join
+将当前 DataFrame 与另外的 DataFrame 进行左关联, 结果集中仅包含左 DataFrame 中的全部记录，右 DataFrame 中匹配不到的数据置为空
+joinType 为 `leftouter`, `left`, `left_outer` 均表示 Left Join
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df1 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(3, "Name3")))
+df1: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> val df2 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name22"), Person(4, "Name4")))
+
+scala> df1.join(df2, "id", joinType="left").show
++---+-----+------+
+| id| name|  name|
++---+-----+------+
+|  1|Name1| Name1|
+|  2|Name2|Name22|
+|  2|Name2| Name2|
+|  3|Name3|  NULL|
++---+-----+------+
+``` 
+##### Right Join
+将当前 DataFrame 与另外的 DataFrame 进行右关联, 结果集中仅包含右 DataFrame 中的全部记录，左 DataFrame 中匹配不到的数据置为空
+joinType 为 `rightouter`, `right`, `right_outer` 均表示 Right Join
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df1 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(3, "Name3")))
+df1: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> val df2 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name22"), Person(4, "Name4")))
+
+scala> df1.join(df2, "id", joinType="right").show
++---+-----+------+
+| id| name|  name|
++---+-----+------+
+|  1|Name1| Name1|
+|  2|Name2| Name2|
+|  2|Name2|Name22|
+|  4| NULL| Name4|
++---+-----+------+
+``` 
+##### Semi Join  
+将当前 DataFrame 与另外的 DataFrame 进行(左)半关联, 结果集中仅包含左右 DataFrame 中的能匹配上的记录，并且右表中存在重复时，仅返回第一条记录。 相当于求交集。  
+joinType 为 `leftsemi`, `semi`, `left_semi` 均表示 Semi Join
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df1 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(3, "Name3")))
+df1: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> val df2 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name22"), Person(4, "Name4")))
+
+scala> df1.join(df2, "id", joinType="semi").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
++---+-----+
+```
+##### Anti Join  
+将当前 DataFrame 与另外的 DataFrame 进行(左)反关联, 结果集中仅包含左 DataFrame 中与右 DataFrame 匹配不上的记录。 相当于求差集。  
+joinType 为 `leftanti`, `anti`, `left_anti` 均表示 Anti Join
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df1 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(3, "Name3")))
+df1: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> val df2 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name22"), Person(4, "Name4")))
+
+scala> df1.join(df2, "id", joinType="full").show
+```
+#### crossJoin
+将当前 DataFrame 与另外的 DataFrame 进行关联, 返回笛卡尔积  
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df1 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(3, "Name3")))
+df1: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> val df2 = spark.createDataFrame(Seq(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name22"), Person(4, "Name4")))
+
+scala> df1.crossJoin(df2).show
++---+-----+---+------+
+| id| name| id|  name|
++---+-----+---+------+
+|  1|Name1|  1| Name1|
+|  2|Name2|  1| Name1|
+|  3|Name3|  1| Name1|
+|  1|Name1|  2| Name2|
+|  2|Name2|  2| Name2|
+|  3|Name3|  2| Name2|
+|  1|Name1|  2|Name22|
+|  2|Name2|  2|Name22|
+|  3|Name3|  2|Name22|
+|  1|Name1|  4| Name4|
+|  2|Name2|  4| Name4|
+|  3|Name3|  4| Name4|
++---+-----+---+------+
+```
 #### limit
 #### offset
 #### union
