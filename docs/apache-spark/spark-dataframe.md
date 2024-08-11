@@ -132,7 +132,7 @@ scala> df.selectExpr("id", "name", "LOWER(name) as lower_name" ).show
 +---+----+----------+
 ```
 #### filter
-根据指定的条件过滤出符合条件的数据, 过滤条件也可以是 SQL 表达式
+根据指定的条件函数过滤出符合条件的数据, 过滤条件也可以是 SQL 表达式
 ``` 
 scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name UNION SELECT 2 AS id, 'B' AS name ")
 df: org.apache.spark.sql.DataFrame = [id: int, name: string]
@@ -256,16 +256,130 @@ scala> unpivotedDF.show
 ```
 #### melt
 与 [unpivot](#unpivot-) 语义一致  
-#### explode 将弃用
 #### withColumn
+根据现有的列或基于现有列的函数，添加或替换一个指定名称的列  
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.withColumn("id_copy", df("id")).withColumn("lower_name", org.apache.spark.sql.functions.lower(df("name"))).show
++---+----+-------+----------+
+| id|name|id_copy|lower_name|
++---+----+-------+----------+
+|  1|   A|      1|         a|
++---+----+-------+----------+
+```
 #### withColumnRenamed
+重命名现有的列  
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.withColumnRenamed("id", "new_id").show
++------+----+
+|new_id|name|
++------+----+
+|     1|   A|
++------+----+
+```
+
 #### withColumns
+对多个列执行 [withColumn](#withcolumn) 操作, 入参是 `新列名` -> `现有列或基于现有列的函数` 的 Map
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.withColumns(Map("id_copy" -> df("id"), "lower_name" -> org.apache.spark.sql.functions.lower(df("name")))).show
++---+----+-------+----------+
+| id|name|id_copy|lower_name|
++---+----+-------+----------+
+|  1|   A|      1|         a|
++---+----+-------+----------+
+```
 #### withColumnsRenamed
+重命名多个现有的列, 入参是 `现有列的名称` -> `新列名` 的 Map
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.withColumnsRenamed(Map("id"-> "new_id", "name" -> "new_name")).show
++------+--------+
+|new_id|new_name|
++------+--------+
+|     1|       A|
++------+--------+
+```
 #### drop
+移除指定的列  
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.drop("id").show()
++----+
+|name|
++----+
+|   A|
++----+
+```
+
 #### transform
+对当前的 DataFrame 作转换，根据传入的 DataFrame => DataFrame 函数，返回新的 DataFrame 
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.transform(_df => df.drop("id")).show
++----+
+|name|
++----+
+|   A|
++----+
+```
 #### map
+对 DataFrame 的每一行 row 作转换, 入参是 row => row 的映射函数  
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.map(row => "prefix_" + row.getAs[String]("name")).show
++--------+
+|   value|
++--------+
+|prefix_A|
++--------+
+``` 
+
 #### flatMap
+对 DataFrame 的 Array 列作转换, 并将每个元素展开成单独的行, 入参是 arrayItem => arrayItem 的映射函数
+
+```  
+scala> val df = spark.sql("SELECT ARRAY(1, 2, 3) as array_column")
+
+scala> df.flatMap(row => row.getAs[Seq[Int]]("array_column").map(_ * 2)).show
++-----+
+|value|
++-----+
+|    2|
+|    4|
+|    6|
++-----+
+```
 #### toJSON
+对 DataFrame 的每一行 row 转换为 JSON 字符串  
+``` 
+scala> val df = spark.sql("SELECT 1 AS id, 'A' AS name UNION SELECT 2, 'B'")
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.toJSON.show
++-------------------+
+|              value|
++-------------------+
+|{"id":1,"name":"A"}|
+|{"id":2,"name":"B"}|
++-------------------+
+``` 
+
 
 ### 分区转换
 #### sortWithinPartitions
