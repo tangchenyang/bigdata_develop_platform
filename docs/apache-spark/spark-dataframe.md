@@ -540,7 +540,7 @@ scala> df1.join(df2, "id", joinType="right").show
 +---+-----+------+
 ``` 
 ##### Semi Join  
-将当前 DataFrame 与另外的 DataFrame 进行(左)半关联, 结果集中仅包含左右 DataFrame 中的能匹配上的记录，并且右表中存在重复时，仅返回第一条记录。 相当于求交集。  
+将当前 DataFrame 与另外的 DataFrame 进行(左)半关联, 结果集中仅包含左右 DataFrame 中的能匹配上的记录，并且右表中存在重复时，仅返回第一条记录。 相当于用右 DF 对左 DF 求交集。  
 joinType 为 `leftsemi`, `semi`, `left_semi` 均表示 Semi Join
 ``` 
 scala> case class Person(id: Int, name: String)
@@ -559,7 +559,7 @@ scala> df1.join(df2, "id", joinType="semi").show
 +---+-----+
 ```
 ##### Anti Join  
-将当前 DataFrame 与另外的 DataFrame 进行(左)反关联, 结果集中仅包含左 DataFrame 中与右 DataFrame 匹配不上的记录。 相当于求差集。  
+将当前 DataFrame 与另外的 DataFrame 进行(左)反关联, 结果集中仅包含左 DataFrame 中与右 DataFrame 匹配不上的记录。 相当于用右 DF 对左 DF 求差集。  
 joinType 为 `leftanti`, `anti`, `left_anti` 均表示 Anti Join
 ``` 
 scala> case class Person(id: Int, name: String)
