@@ -954,15 +954,83 @@ scala> df.summary().show
 ## Action 算子
 ### 转换为内存集合
 #### reduce
-#### isEmpty
-#### head
-#### first
-#### foreach
-#### foreachPartition
-#### take
-#### tail
-#### takeAsList
+对 DataFrame 进行合并操作, 所有记录按照用户指定的 (left, right) => result 函数从左到右进行合并, 返回一个 Java 集合  
+如下面的例子中，仅保留最大的 id 的第一条记录
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name2"), Person(3, "Name3"), Person(3, "Name333")))
 
+scala> df.reduce((row_left, row_right) => if (row_right.getAs[Int]("id") > row_left.getAs[Int]("id")) row_right else row_left)
+res0: org.apache.spark.sql.Row = [3,Name3]
+```
+#### foreach
+遍历 DataFrame 中的每一条记录，根据提供的 row => Unit 函数，将记录写入外部系统，或打印到控制台，或添加到其他 Java 集合中等
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2).map(x => Person(x, "Name" + x)))
+
+scala> df.foreach(row => println(s"id: ${row.get(0)}, name: ${row.get(1)}"))
+id: 1, name: Name1
+id: 2, name: Name2
+```
+#### foreachPartition
+遍历 DataFrame 中的每一个 partition，每个 partition 中的 row 被封装在一个 Iterator 中， 根据提供的 iterator[Row] => Unit 函数，将记录写入外部系统，或打印到控制台，或添加到其他 Java 集合中等
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2).map(x => Person(x, "Name" + x))).repartition(2)
+
+scala> df.foreachPartition{ (iter: Iterator[org.apache.spark.sql.Row]) => 
+  val partitionId = org.apache.spark.TaskContext.getPartitionId 
+  iter.foreach(row => println(s"partition: ${partitionId}, id: ${row.get(0)}, name: ${row.get(1)}"))
+}
+partition: 0, id: 1, name: Name1
+partition: 1, id: 2, name: Name2
+```
+#### isEmpty
+判断 DataFrame 是否为空, 返回 true 或 false  
+
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2).map(x => Person(x, "Name" + x)))
+
+scala> df.isEmpty
+res0: Boolean = false
+```
+#### head
+返回 DataFrame 的前 n 条记录，默认为 n = 1  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.head
+res0: org.apache.spark.sql.Row = [1,Name1]
+
+scala> df.head(2)
+res1: Array[org.apache.spark.sql.Row] = Array([1,Name1], [2,Name2])
+```
+#### first
+与 [head(1)](#head) 语义一致  
+
+#### take
+与 [head(n)](#head) 语义一致
+#### tail
+返回 DataFrame 的后 n 条记录
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.tail(2)
+res0: Array[org.apache.spark.sql.Row] = Array([2,Name2], [3,Name3])
+```
+#### takeAsList
+与 [take](#take) 相似，只是返回返回一个 Java 的 List  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.takeAsList(2)
+res1: java.util.List[org.apache.spark.sql.Row] = [[1,Name1], [2,Name2]]
+```
 #### collect
 #### collectAsList
 #### toLocalIterator
