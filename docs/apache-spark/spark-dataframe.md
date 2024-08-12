@@ -540,7 +540,7 @@ scala> df1.join(df2, "id", joinType="right").show
 +---+-----+------+
 ``` 
 ##### Semi Join  
-将当前 DataFrame 与另外的 DataFrame 进行(左)半关联, 结果集中仅包含左右 DataFrame 中的能匹配上的记录，并且右表中存在重复时，仅返回第一条记录。 相当于用右 DF 对左 DF 求交集。  
+将当前 DataFrame 与另外的 DataFrame 进行(左)半关联, 结果集中仅包含左右 DataFrame 中的能匹配上的记录，并且右表中存在重复时，仅返回第一条记录。 
 joinType 为 `leftsemi`, `semi`, `left_semi` 均表示 Semi Join
 ``` 
 scala> case class Person(id: Int, name: String)
@@ -599,29 +599,357 @@ scala> df1.crossJoin(df2).show
 |  3|Name3|  4| Name4|
 +---+-----+---+------+
 ```
-#### limit
-#### offset
-#### union
-#### unionAll
-#### unionByName
-#### intersect
-#### intersectAll
-#### except
-#### exceptAll
-#### sample
-#### randomSplit
-#### randomSplitAsList
+#### limit  
+取当前 DataFrame 的前 n 条记录，返回一个新的 DataFrame  
+```  
+scala> case class Person(id: Int, name: String)
+scala> val df =  spark.createDataFrame((1 to 6).toList.map(x => Person(x, "Name" + x)))
 
+scala> df.limit(3).show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+```
+#### offset
+跳过当前 DataFrame 的前 n 条记录，返回一个新的 DataFrame  
+```  
+scala> case class Person(id: Int, name: String)
+scala> val df =  spark.createDataFrame((1 to 6).toList.map(x => Person(x, "Name" + x)))
+
+scala> df.offset(2).limit(3).show
++---+-----+
+| id| name|
++---+-----+
+|  3|Name3|
+|  4|Name4|
+|  5|Name5|
++---+-----+
+```
+#### union
+两个 DataFrame 求并集，按列的位置进行合并，不会对结果去重，返回一个新的 DataFrame  
+```  
+scala> case class Person(id: Int, name: String)
+scala> val df1 =  spark.createDataFrame((1 to 3).toList.map(x => Person(x, "Name" + x)))
+
+scala> val df2 =  spark.createDataFrame((3 to 5).toList.map(x => Person(x, "Name" + x)))
+
+scala> df1.union(df2).show()
++---+-----+
+| id| name|
++---+-----+
+|  3|Name3|
+|  4|Name4|
+|  5|Name5|
++---+-----+
+```
+#### unionAll
+与 [union](#union) 的行为一致，提供与 SQL 语义一致的同名算子
+#### unionByName
+两个 DataFrame 求并集，按列的名称进行合并，不会对结果去重，返回一个新的 DataFrame  
+
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df1 =  spark.createDataFrame((1 to 3).toList.map(x => Person(x, "Name" + x)))
+
+scala> val df2 =  spark.createDataFrame((3 to 5).toList.map(x => Person(x, "Name" + x))).to
+
+scala> df1.union(df2).show()
++---+-----+
+| id| name|
++---+-----+
+|  3|Name3|
+|  4|Name4|
+|  5|Name5|
++---+-----+
+```
+#### intersect
+返回两个 DataFrame 的交集，会对结果去重  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df1 =  spark.createDataFrame(List(1, 2, 3, 3, 3).map(x => Person(x, "Name" + x)))
+
+scala> val df2 =  spark.createDataFrame(List(3, 3, 4, 5).map(x => Person(x, "Name" + x)))
+
+scala> df1.intersect(df2).show()
++---+-----+
+| id| name|
++---+-----+
+|  3|Name3|
++---+-----+
+```
+#### intersectAll
+返回两个 DataFrame 的交集，不会对结果去重  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df1 =  spark.createDataFrame(List(1, 2, 3, 3, 3).map(x => Person(x, "Name" + x)))
+
+scala> val df2 =  spark.createDataFrame(List(3, 3, 4, 5).map(x => Person(x, "Name" + x)))
+
+scala> df1.intersectAll(df2).show()
++---+-----+
+| id| name|
++---+-----+
+|  3|Name3|
+|  3|Name3|
++---+-----+
+
+```
+#### except
+返回两个 DataFrame 的差集，不会对结果去重
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df1 =  spark.createDataFrame(List(1, 2, 2, 3, 3).map(x => Person(x, "Name" + x)))
+
+scala> val df2 =  spark.createDataFrame(List(3, 4, 5).map(x => Person(x, "Name" + x)))
+
+scala> df1.except(df2).show()
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
++---+-----+
+
+```
+#### exceptAll
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df1 =  spark.createDataFrame(List(1, 2, 2, 3, 3).map(x => Person(x, "Name" + x)))
+
+scala> val df2 =  spark.createDataFrame(List(3, 4, 5).map(x => Person(x, "Name" + x)))
+
+scala> df1.exceptAll(df2).show()
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+```
+#### sample
+对 DataFrame 进行采样，返回包含样本记录的新 DataFrame, 参数 fraction 不代表精确的比例，仅代表每条记录被命中的概率  
+```  
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame((1 to 100).toList.map(x => Person(x, "Name" + x)))
+
+scala> df.sample(0.05).show()
++---+------+
+| id|  name|
++---+------+
+|  1| Name1|
+| 17|Name17|
+| 21|Name21|
+| 90|Name90|
++---+------+
+```
+#### randomSplit
+将 DataFrame 切分成一组 DataFrame 的 Array, 切分成多少组由权重 weights 的数组大小决定, 权重不代表精确的比例，仅代表每条记录被命中的概率  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame((1 to 100).toList.map(x => Person(x, "Name" + x)))
+
+scala> val splitedDFs = df.randomSplit(Array(0.2, 0.8))
+splitedDFs: Array[org.apache.spark.sql.Dataset[org.apache.spark.sql.Row]] = Array([id: int, name: string], [id: int, name: string])
+
+scala> splitedDFs.map(_.count)
+res0: Array[Long] = Array(16, 84)
+```
+#### randomSplitAsList
+将 DataFrame 切分成一组 DataFrame 的 java List, 切分成多少组由权重 weights 的数组大小决定, 并要求传入种子值 seed。权重不代表精确的比例，仅代表每条记录被命中的概率
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame((1 to 100).toList.map(x => Person(x, "Name" + x)))
+
+scala> val splitedDFs = df.randomSplitAsList(weights=Array(0.2, 0.8), seed=scala.util.Random.nextLong)
+splitedDFs: java.util.List[org.apache.spark.sql.Dataset[org.apache.spark.sql.Row]] = [[id: int, name: string], [id: int, name: string]]
+
+scala> splitedDFs.asScala.map(_.count)
+res0: scala.collection.mutable.Buffer[Long] = ArrayBuffer(14, 86)
+```
 
 ### 聚合操作
 #### groupBy
+将 DataFrame 按指定的列进行分组，返回一个 RelationalGroupedDataset，以便进行后续的聚合操作  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 1, 2, 2, 2).map(x => Person(x, "Name" + x)))
+
+scala> val groupedDF = df.groupBy(df("id"))
+groupedDF: org.apache.spark.sql.RelationalGroupedDataset = RelationalGroupedDataset: [grouping expressions: [id: int], value: [id: int, name: string], type: GroupBy]
+
+scala> groupedDF.count.show
++---+-----+
+| id|count|
++---+-----+
+|  1|    2|
+|  2|    3|
++---+-----+
+```
+
 #### agg
-#### roolup
+将 DataFrame 视为一个整体进行聚合操作  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 1, 2, 2, 2).map(x => Person(x, "Name" + x)))
+
+scala> df.agg(max("id")).show
++-------+
+|max(id)|
++-------+
+|      2|
++-------+
+
+scala> df.agg(Map("id" -> "count", "name" -> "max")).show
++---------+---------+
+|count(id)|max(name)|
++---------+---------+
+|        5|    Name2|
++---------+---------+
+```
+
+#### rollup
+将 DataFrame 按指定的列进行多维逐级聚合操作，类似与 [groupBy](#groupby)，同样返回一个 RelationalGroupedDataset，以便进行后续的聚合操作。  
+但是会以指定的列逐级分组，即： 假设给定维度为 (colA, colB, colC)，则会分别按照如下组合对数据进行汇总：  
+- colA, colB, colC
+- colA, colB
+- colA
+- None
+```  
+scala> case class Person(id: Int, name: String, age: Int)
+scala> val df = spark.createDataFrame(List(1, 1, 2, 2, 2).map(x => Person(x, "Name" + x, 50)))
+
+scala> df.rollup("id", "name", "age").count().show
++----+-----+----+-----+
+|  id| name| age|count|
++----+-----+----+-----+
+|   1|Name1|  50|    2|
+|   2|Name2|  50|    3|
+|   1|Name1|NULL|    2|
+|   2|Name2|NULL|    3|
+|   1| NULL|NULL|    2|
+|   2| NULL|NULL|    3|
+|NULL| NULL|NULL|    5|
++----+-----+----+-----+
+
+```
+
 #### cube
-#### groupingSets
+将 DataFrame 按指定的列创建一个多维立方体，类似与 [groupBy](#groupby)，同样返回一个 RelationalGroupedDataset，以便进行后续的聚合操作。  
+但是会以指定的列按所有的维度组合进行分组，多维立方体(cube)即： 假设给定维度为 (colA, colB, colC)，则会分别按照如下组合对数据进行汇总：
+- colA, colB, colC
+- colA, colB
+- colA, colC
+- colB, colC
+- colA
+- colB
+- colC
+- None
+```  
+scala> case class Person(id: Int, name: String, age: Int)
+scala> val df = spark.createDataFrame(List(1, 1, 2, 2, 2).map(x => Person(x, "Name" + x, 50)))
+
+scala> df.cube("id", "name", "age").count().show
++----+-----+----+-----+
+|  id| name| age|count|
++----+-----+----+-----+
+|   1|Name1|  50|    2|
+|   2|Name2|  50|    3|
+|   1|Name1|NULL|    2|
+|   2|Name2|NULL|    3|
+|   1| NULL|  50|    2|
+|   2| NULL|  50|    3|
+|NULL|Name1|  50|    2|
+|NULL|Name2|  50|    3|
+|   1| NULL|NULL|    2|
+|   2| NULL|NULL|    3|
+|NULL|Name1|NULL|    2|
+|NULL|Name2|NULL|    3|
+|NULL| NULL|  50|    5|
+|NULL| NULL|NULL|    5|
++----+-----+----+-----+
+
+```
+#### groupingSets  Spark 4.0 + 
+todo 
 #### distinct
+对 DataFrame 进行去重，完全重复的数据将仅保留一条
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name2"), Person(3, "Name3"), Person(3, "Name333")))
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.distinct.show
++---+-------+
+| id|   name|
++---+-------+
+|  1|  Name1|
+|  2|  Name2|
+|  3|  Name3|
+|  3|Name333|
++---+-------+
+```
 #### dropDuplicates
+对 DataFrame 按指定的列进行去重，相同列的重复记录将仅保留第一条记录
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(Person(1, "Name1"), Person(2, "Name2"), Person(2, "Name2"), Person(3, "Name3"), Person(3, "Name333")))
+df: org.apache.spark.sql.DataFrame = [id: int, name: string]
+
+scala> df.dropDuplicates("id").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+```
+
 #### describe
+对 DataFrame 的数据进行描述，返回一些常用的统计指标  
+``` 
+scala> case class Person(id: Int, name: String, age: Int)
+scala> val df = spark.createDataFrame(List(1, 1, 2, 2, 2).map(x => Person(x, "Name" + x, 50)))
+
+scala> df.describe().show
++-------+------------------+-----+----+
+|summary|                id| name| age|
++-------+------------------+-----+----+
+|  count|                 5|    5|   5|
+|   mean|               1.6| NULL|50.0|
+| stddev|0.5477225575051661| NULL| 0.0|
+|    min|                 1|Name1|  50|
+|    max|                 2|Name2|  50|
++-------+------------------+-----+----+
+```
+
+#### summary 
+与 [describe](#describe) 类似，在其基础上增加了 `p25`, `p50`, `p75` 等指标  
+
+``` 
+scala> case class Person(id: Int, name: String, age: Int)
+scala> val df = spark.createDataFrame(List(1, 1, 2, 2, 2).map(x => Person(x, "Name" + x, 50)))
+
+scala> df.summary().show
++-------+------------------+-----+----+
+|summary|                id| name| age|
++-------+------------------+-----+----+
+|  count|                 5|    5|   5|
+|   mean|               1.6| NULL|50.0|
+| stddev|0.5477225575051661| NULL| 0.0|
+|    min|                 1|Name1|  50|
+|    25%|                 1| NULL|  50|
+|    50%|                 2| NULL|  50|
+|    75%|                 2| NULL|  50|
+|    max|                 2|Name2|  50|
++-------+------------------+-----+----+
+```
 
 ## Action 算子
 ### 转换为内存集合
