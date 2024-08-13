@@ -1072,6 +1072,47 @@ scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + 
 scala> df.count
 res0: Long = 3
 ```
+### createOrReplaceGlobalTempView
+与 [createGlobalTempView](#createGlobalTempView) 类似，只是视图存在时将覆盖原有视图
+
+### 写入外部算子
+#### write v1
+DataFrame.write 方法将返回一个 DataFrameWriter 实例，包含以下方法
+##### insertInto
+##### saveAsTable
+##### jdbc
+##### json
+##### parquet
+##### orc 
+##### text
+##### csv
+##### xml
+##### mode 
+##### format
+##### option
+##### partitionBy 
+##### bucketBy
+##### sortBy
+##### clusterBy
+
+#### writeTo v2
+DataFrame.writeTo 方法将返回一个 DataFrameWriterV2 实例，包含以下方法  
+##### create
+##### replace
+##### createOrReplace
+##### append 
+##### overwrite
+##### overwritePartitions
+##### using
+##### option
+##### tableProperty
+##### partitionBy
+##### clusterBy
+
+#### mergeInto spark 4.0 +
+DataFrame.mergeInto 方法将返回一个 MergeIntoWriter 实例，包含以下方法
+todo 
+
 
 ## 控制算子
 DataFrame 提供与 RDD 行为一致的控制算子如:
@@ -1139,13 +1180,4 @@ scala> newSpark.sql("SELECT * FROM global_temp.temp_view_person").show
 |  3|Name3|
 +---+-----+
 ```
-### createOrReplaceGlobalTempView
-与 [createGlobalTempView](#createGlobalTempView) 类似，只是视图存在时将覆盖原有视图
-
-### 写入外部算子
-#### write v1 
-#### writeTo v2
-#### mergeInto spark 4.0 +
-#### 
-
 
