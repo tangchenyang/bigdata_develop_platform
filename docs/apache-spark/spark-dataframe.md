@@ -1032,10 +1032,46 @@ scala> df.takeAsList(2)
 res1: java.util.List[org.apache.spark.sql.Row] = [[1,Name1], [2,Name2]]
 ```
 #### collect
+将 DataFrame 的所有记录收集起来，返回一个 Java 的 Array 集合到 Driver 端，避免对大数据集使用此操作，以防止 Driver 端 OOM   
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.collect
+res0: Array[org.apache.spark.sql.Row] = Array([1,Name1], [2,Name2], [3,Name3])
+```
+
 #### collectAsList
+与 [collect](#collect) 相似，只是返回一个 Java 的 List，避免对大数据集使用此操作，以防止 Driver 端 OOM  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.collect
+res0: java.util.List[org.apache.spark.sql.Row] = [[1,Name1], [2,Name2], [3,Name3]]
+```
+
 #### toLocalIterator
+将 DataFrame 的所有记录封装成 Java 的迭代器， Driver 端消耗的内存将与最大的 partition 消耗的内存一致  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> val rowIterator = df.toLocalIterator
+rowIterator: java.util.Iterator[org.apache.spark.sql.Row] = IteratorWrapper(<iterator>)
+
+scala> rowIterator.next
+res0: org.apache.spark.sql.Row = [1,Name1]
+```
 #### count 
-#### 
+返回 DataFrame 的总记录数 
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.count
+res0: Long = 3
+```
 
 ## 控制算子
 ### createTempView
