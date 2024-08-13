@@ -1074,10 +1074,73 @@ res0: Long = 3
 ```
 
 ## 控制算子
-### createTempView
+DataFrame 提供与 RDD 行为一致的控制算子如:
+- [persist](spark-rdd.md#persist)  
+- [cache](spark-rdd.md#cache)  
+- [unpersist](spark-rdd.md#unpersist)  
+- [checkpoint](spark-rdd.md#checkpoint)  
+除了这些以外，还提供了一些创建 View 的控制类算子  
+### createTempView   
+为当前 DataFrame 创建临时视图，可用 SQL 语句对其进行访问，在当前 SparkSession 内有效，视图存在时将报错
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.createTempView("temp_view_person")
+
+scala> spark.sql("SELECT * FROM temp_view_person").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+scala> spark
+res4: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@5f59d707
+
+scala> val newSpark = spark.newSession
+newSpark: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@1916f999
+
+scala> newSpark.sql("SELECT * FROM temp_view_person").show
+org.apache.spark.sql.catalyst.ExtendedAnalysisException: [TABLE_OR_VIEW_NOT_FOUND] The table or view `temp_view_person` cannot be found.
+```
 ### createOrReplaceTempView
+与 [createTempView](#createTempView-) 类似，只是视图存在时将覆盖原有视图
 ### createGlobalTempView
+为当前 DataFrame 创建临时视图，可用 SQL 语句对其进行访问，在当前 Spark Application 内有效，视图存在时将报错
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.createGlobalTempView("temp_view_person")
+
+scala> spark.sql("SELECT * FROM global_temp.temp_view_person").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> spark
+res4: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@5f59d707
+
+scala> val newSpark = spark.newSession
+newSpark: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@1916f999
+
+scala> newSpark.sql("SELECT * FROM global_temp.temp_view_person").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+```
 ### createOrReplaceGlobalTempView
+与 [createGlobalTempView](#createGlobalTempView) 类似，只是视图存在时将覆盖原有视图
 
 ### 写入外部算子
 #### write v1 
