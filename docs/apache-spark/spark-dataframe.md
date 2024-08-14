@@ -1079,16 +1079,183 @@ res0: Long = 3
 #### write v1
 DataFrame.write 方法将返回一个 DataFrameWriter 实例，包含以下方法
 ##### insertInto
+将 DataFrame 按写入指定的表中，写入操作是基于列的顺序的，因此要求目标表结构必须与 DataFrame 的 Schema 一致  
+不会自动创建表，可根据 [mode](#mode-) 参数来选择写入模式，默认为追加记录  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> spark.sql("create table test_table__insert_into(id int, name string)")
+res0: org.apache.spark.sql.DataFrame = []
+
+scala> df.write.mode("append").insertInto("test_table__insert_into")
+scala> df.write.mode("append").insertInto("test_table__insert_into")
+
+scala> spark.table("test_table__insert_into").show()
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  1|Name1|
+|  2|Name2|
+|  2|Name2|
+|  3|Name3|
+|  3|Name3|
++---+-----+
+
+scala> df.write.mode("overwrite").insertInto("test_table__insert_into")
+
+scala> spark.table("test_table__insert_into").show()
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> df.select("name", "id").write.insertInto("test_table__insert_into")
+org.apache.spark.sql.AnalysisException: [INCOMPATIBLE_DATA_FOR_TABLE.CANNOT_SAFELY_CAST] Cannot write incompatible data for the table `spark_catalog`.`default`.`test_person`: Cannot safely cast `id` "STRING" to "INT".
+  at org.apache.spark.sql.errors.QueryCompilationErrors$.incompatibleDataToTableCannotSafelyCastError(QueryCompilationErrors.scala:2216)
+```
 ##### saveAsTable
+将 DataFrame 按写入指定的表中，写入操作是基于列名的，因此不会对 DataFrame 的列顺序有严格要求，只要列存在即可  
+表不存在时将自动创建，可根据 [mode](#mode-) 参数来选择写入模式，默认为表存在时报错  
+
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.write.mode("overwrite").saveAsTable("test_person_save_as_table")
+
+scala> spark.table("test_person_save_as_table").show()
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> df.select("name", "id").write.mode("append").saveAsTable("test_person_save_as_table")
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  1|Name1|
+|  2|Name2|
+|  2|Name2|
+|  3|Name3|
+|  3|Name3|
++---+-----+
+```
 ##### jdbc
+将 DataFrame 按 jdbc 协议写入外部数据库，如 MySQL/Postgres 等, 等效于 [format](#format) 为 `jdbc` 时的 [save](#save) 操作   
+表不存在时将自动创建，可根据 [mode](#mode-) 参数来选择写入模式，默认为表存在时报错  
+本例子中需要使用 MySQL 驱动来连接本地的 MySQL 数据库，因此需要将相应的驱动包加入 classpath，比如：  
+```shell
+spark-shell --packages "mysql:mysql-connector-java:8.0.28" 
+```
+
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> val connectionProperties = new java.util.Properties()
+scala> connectionProperties.put("user", "root")
+scala> connectionProperties.put("password", "123456")
+scala> connectionProperties.put("driver", "com.mysql.jdbc.Driver")
+
+scala> df.write.jdbc(
+  url="jdbc:mysql://localhost:3306/test?createDatabaseIfNotExist=true", 
+  table="test_table__jdbc",
+  connectionProperties=connectionProperties
+)
+
+scala> spark.read.jdbc(
+  url="jdbc:mysql://localhost:3306/test?createDatabaseIfNotExist=true", 
+  table="test_table__jdbc",
+  properties=connectionProperties
+).show
++---+-----+
+| id| name|
++---+-----+
+|  2|Name2|
+|  1|Name1|
+|  3|Name3|
++---+-----+
+```
+##### save
+将 DataFrame 保存到外部存储系统中, 是 [jdbc](#jdbc) 以及各个写文件操作（如 [json](#json), [csv](#csv) 等）的统一抽象 
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> { 
+df.write.format("jdbc")
+  .option("url", "jdbc:mysql://localhost:3306/test?createDatabaseIfNotExist=true")
+  .option("driver", "com.mysql.jdbc.Driver")
+  .option("user", "root")
+  .option("password", "123456")
+  .option("dbtable", "test_table__jdbc_save")
+  .save
+}
+
+scala> { 
+spark.read.format("jdbc")
+  .option("url", "jdbc:mysql://localhost:3306/test?createDatabaseIfNotExist=true")
+  .option("driver", "com.mysql.jdbc.Driver")
+  .option("user", "root")
+  .option("password", "123456")
+  .option("dbtable", "test_table__jdbc_save")
+  .load
+}.show
++---+-----+
+| id| name|
++---+-----+
+|  2|Name2|
+|  3|Name3|
+|  1|Name1|
++---+-----+
+
+scala> df.write.mode("overwrite").format("csv").option("header", "true").save("hdfs:///test_write/test_csv")
+
+scala> spark.read.format("csv").option("header", "true").load("hdfs:///test_write/test_csv").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+```
 ##### json
+等同于 [format](#format) 为 `json` 时的 [save](#save) 操作  
 ##### parquet
+等同于 [format](#format) 为 `parquet` 时的 [save](#save) 操作
 ##### orc 
+等同于 [format](#format) 为 `orc` 时的 [save](#save) 操作
 ##### text
+等同于 [format](#format) 为 `text` 时的 [save](#save) 操作
 ##### csv
+等同于 [format](#format) 为 `csv` 时的 [save](#save) 操作
 ##### xml
+等同于 [format](#format) 为 `xml` 时的 [save](#save) 操作
 ##### mode 
+指定写入目标资源（表或文件目录等）时的写入模式  
+- Overwrite: 将目标资源的原有记录覆盖，saveMode 为 `overwrite` 即表示 Overwrite 语义
+- Append: 向目标资源中追加记录，saveMode 为 `append` 即表示 Append 语义
+- Ignore: 当目标资源已存在时，将不做任何操作，saveMode 为 `ingore` 即表示 Ignore 语义
+- ErrorIfExists: 当目标资源已存在时，将抛出异常，saveMode 为 `error`, `errorifexists`, `default` 均表示 ErrorIfExists 语义
 ##### format
+- jdbc
+- json
+- parquet
+- orc
+- text
+- csv
+- xml 
+
 ##### option
 ##### partitionBy 
 ##### bucketBy
