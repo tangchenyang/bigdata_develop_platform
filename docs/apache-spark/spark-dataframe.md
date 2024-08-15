@@ -433,7 +433,7 @@ scala> df.toJSON.show
 
 ``` 
 scala> case class Person(id: Int, name: String)
-scala> val persons = (1 to 6).toList.map(x => Row(x, "Name" + x))
+scala> val persons = (1 to 6).toList.map(x => Person(x, "Name" + x))
 persons: List[Person] = List(Person(1,Name1), Person(2,Name2), Person(3,Name3), Person(4,Name4), Person(5,Name5), Person(6,Name6))
 
 scala> val df = sc.parallelize(persons, 2).toDF
@@ -442,20 +442,17 @@ df: org.apache.spark.sql.DataFrame = [id: int, name: string ... 1 more field]
 scala> val sortedDF = df.sortWithinPartitions(df("id").desc)
 sortedDF: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [id: int, name: string]
 
-scala> sortedDF.show
-+---+-----+
-| id| name|
-+---+-----+
-|  3|Name3|
-|  2|Name2|
-|  1|Name1|
-|  6|Name6|
-|  5|Name5|
-|  4|Name4|
-+---+-----+
-
-scala> sortedDF.rdd.glom.collect
-res0: Array[Array[org.apache.spark.sql.Row]] = Array(Array([3,Name3], [2,Name2], [1,Name1]), Array([6,Name6], [5,Name5], [4,Name4]))
+scala> sortedDF.withColumn("partition_id", org.apache.spark.sql.functions.spark_partition_id()).show
++---+-----+------------+
+| id| name|partition_id|
++---+-----+------------+
+|  3|Name3|           0|
+|  2|Name2|           0|
+|  1|Name1|           0|
+|  6|Name6|           1|
+|  5|Name5|           1|
+|  4|Name4|           1|
++---+-----+------------+
 ```
 #### mapPartitions
 对 DataFrame 的每一个分区做转换操作，每个分区中的记录被封装成一个迭代器，因此这个转换函数应是 iterator => iterator 的映射
@@ -468,17 +465,17 @@ df: org.apache.spark.sql.DataFrame = [id: int, name: string ... 1 more field]
 scala> val transformed = df.mapPartitions{ iter => val salt = "abcd_"; iter.map( row => salt + row.getAs("name")) }
 transformed: org.apache.spark.sql.Dataset[String] = [value: string]
 
-scala> transformed.show
-+----------+
-|     value|
-+----------+
-|abcd_Name1|
-|abcd_Name2|
-|abcd_Name3|
-|abcd_Name4|
-|abcd_Name5|
-|abcd_Name6|
-+----------+
+scala> transformed.withColumn("partition_id", org.apache.spark.sql.functions.spark_partition_id()).show
++----------+------------+
+|     value|partition_id|
++----------+------------+
+|abcd_Name1|           0|
+|abcd_Name2|           1|
+|abcd_Name3|           2|
+|abcd_Name4|           3|
+|abcd_Name5|           4|
+|abcd_Name6|           5|
++----------+------------+
 ```
 
 #### repartition
@@ -486,7 +483,38 @@ scala> transformed.show
 #### coalesce
 减少 DataFrame 的分区到目标数量，与 [RDD - coalesce](spark-rdd.md#coalesce) 的行为一致
 #### repartitionByRange
-todo 待补充
+调整 DataFrame 的分区到目标数量，对数据进行随机重新分布，会产生 Shuffle，重分布的过程将按指定列进行区间采样并进行区间排序（默认升序，空值优先），
+因为采样可能返回不同的结果，故多次 repartitionByRange 的最终结果有可能不一致
+``` 
+scala> case class Person(id: Int, name: String)
+
+scala> val df =  spark.createDataFrame((1 to 6).toList.map(x => Person(x, "Name" + x)))
+df: org.apache.spark.sql.DataFrame = [id: int, name: string ... 1 more field]
+
+scala> df.repartitionByRange(3, $"id").withColumn("partition_id", org.apache.spark.sql.functions.spark_partition_id()).show
++---+-----+------------+
+| id| name|partition_id|
++---+-----+------------+
+|  1|Name1|           0|
+|  2|Name2|           0|
+|  3|Name3|           1|
+|  4|Name4|           1|
+|  5|Name5|           2|
+|  6|Name6|           2|
++---+-----+------------+
+scala> df.repartitionByRange(3, $"id".desc).withColumn("partition_id", org.apache.spark.sql.functions.spark_partition_id()).show
++---+-----+------------+
+| id| name|partition_id|
++---+-----+------------+
+|  5|Name5|           0|
+|  6|Name6|           0|
+|  3|Name3|           1|
+|  4|Name4|           1|
+|  1|Name1|           2|
+|  2|Name2|           2|
++---+-----+------------+
+```
+
 
 ### 集合运算
 #### join
@@ -1296,19 +1324,198 @@ scala> spark.read.format("csv").option("header", "true").load("hdfs:///test_writ
 - ErrorIfExists: 当目标资源已存在时，将抛出异常，saveMode 为 `error`, `errorifexists`, `default` 均表示 ErrorIfExists 语义
 
 #### writeTo v2
-DataFrame.writeTo(tableName) 方法将返回一个 DataFrameWriterV2 实例，用于操作 V2 的表 (Transactional Tables)  
-todo 待补充  
+DataFrame.writeTo(tableName) 方法将返回一个 DataFrameWriterV2 实例，用于操作 V2 的表（如 DataLake：Iceberg 等） 
+本例子中将采用 Spark Tests 中常用的 InMemoryTable，需先下载 [spark-catalyst_2.12-3.5.1-tests.jar](https://repo1.maven.org/maven2/org/apache/spark/spark-catalyst_2.12/3.5.1/spark-catalyst_2.12-3.5.1-tests.jar)  
+启动 spark-shell  
+```  
+spark-shell --jars spark-catalyst_2.12-3.5.1-tests.jar
+```
+启动后注册 InMemoryTableCatalog 后，即可正常操作 InMemoryTable  
+```
+spark.conf().set("spark.sql.catalog.in_mem_catalog", "org.apache.spark.sql.connector.catalog.InMemoryTableCatalog")
+```
 ##### create
+将当前 DataFrame 创建为指定名称的表，表存在时将报错 
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.writeTo("in_mem_catalog.test_write_to__create").create()
+
+scala> spark.table("in_mem_catalog.test_write_to__create").show 
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala>  df.writeTo("in_mem_catalog.test_write_to__create").create()
+org.apache.spark.sql.catalyst.analysis.TableAlreadyExistsException: [TABLE_OR_VIEW_ALREADY_EXISTS] Cannot create table or view `test_write_to__create` because it already exists.
+```
 ##### replace
+用当前 DataFrame 将指定名称的替换，表不存在时将报错  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.writeTo("in_mem_catalog.test_write_to__replace").replace()
+org.apache.spark.sql.catalyst.analysis.CannotReplaceMissingTableException: [TABLE_OR_VIEW_NOT_FOUND] The table or view `test_write_to__replace` cannot be found.
+
+scala> df.writeTo("in_mem_catalog.test_write_to__replace").create()
+scala> spark.table("in_mem_catalog.test_write_to__replace").show 
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> df.select("name", "id").writeTo("in_mem_catalog.test_write_to__replace").replace()
+scala> spark.table("in_mem_catalog.test_write_to__replace").show
++-----+---+
+| name| id|
++-----+---+
+|Name1|  1|
+|Name2|  2|
+|Name3|  3|
++-----+---+
+```
+
 ##### createOrReplace
+[create](#create) 和 [replace](#replace) 的幂等操作，表不存在时创建，表存在时则替换   
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.writeTo("in_mem_catalog.test_write_to__create_or_replace").createOrReplace()
+
+scala> spark.table("in_mem_catalog.test_write_to__create_or_replace").show 
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> df.select("name", "id").writeTo("in_mem_catalog.test_write_to__create_or_replace").createOrReplace()
+scala> spark.table("in_mem_catalog.test_write_to__create_or_replace").show
++-----+---+
+| name| id|
++-----+---+
+|Name1|  1|
+|Name2|  2|
+|Name3|  3|
++-----+---+
+```
+
 ##### append 
+将 DataFrame 中的记录追加写入到目标表中，写入操作是基于列名的，因此不会对 DataFrame 的列顺序有严格要求，只要列存在即可  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> df.writeTo("in_mem_catalog.test_write_to__append").createOrReplace()
+
+scala> spark.table("in_mem_catalog.test_write_to__append").show 
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> df.select("name", "id").writeTo("in_mem_catalog.test_write_to__append").append()
+scala> spark.table("in_mem_catalog.test_write_to__append").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+```
 ##### overwrite
+用当前 DataFrame 中的记录将目标表按条件覆盖，匹配的行将被覆盖，其余行将会追加到目标表中  
+写入操作是基于列名的，因此不会对 DataFrame 的列顺序有严格要求，只要列存在即可  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> spark.sql("CREATE TABLE in_mem_catalog.test_write_to__overwrite (id int, name string) USING foo PARTITIONED BY (id)")
+scala> df.writeTo("in_mem_catalog.test_write_to__overwrite").append
+
+scala> spark.table("in_mem_catalog.test_write_to__overwrite").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> val df2 = spark.createDataFrame(List(Person(3, "Name333"), Person(4, "Name444")))
+scala> df2.writeTo("in_mem_catalog.test_write_to__overwrite").overwrite($"id" === 3)
+
+scala> spark.table("in_mem_catalog.test_write_to__overwrite").show
++---+-------+
+| id|   name|
++---+-------+
+|  4|Name444|
+|  1|  Name1|
+|  3|Name333|
+|  2|  Name2|
++---+-------+
+
+scala> df2.writeTo("in_mem_catalog.test_write_to__overwrite").overwrite(org.apache.spark.sql.functions.lit(true))
+
+scala> spark.table("in_mem_catalog.test_write_to__overwrite").show
++---+-------+
+| id|   name|
++---+-------+
+|  4|Name444|
+|  3|Name333|
++---+-------+
+```
 ##### overwritePartitions
-##### using
-##### option
-##### tableProperty
-##### partitionBy
-##### clusterBy
+用当前 DataFrame 对目标表进行分区覆盖操作，匹配的分区将被覆盖  
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 1, 1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> spark.sql("CREATE TABLE in_mem_catalog.test_write_to__overwrite_partitions (id int, name string) USING foo PARTITIONED BY (id)")
+scala> df.writeTo("in_mem_catalog.test_write_to__overwrite_partitions").append
+
+scala> spark.table("in_mem_catalog.test_write_to__overwrite_partitions").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+
+scala> val df2 = spark.createDataFrame(List(Person(1, "Name111"), Person(4, "Name444")))
+scala> df2.writeTo("in_mem_catalog.test_write_to__overwrite_partitions").overwritePartitions
+
+scala> spark.table("in_mem_catalog.test_write_to__overwrite_partitions").show
++---+-------+
+| id|   name|
++---+-------+
+|  4|Name444|
+|  1|Name111|
+|  3|  Name3|
+|  2|  Name2|
++---+-------+
+```
 
 #### mergeInto spark 4.0 +
 DataFrame.mergeInto 方法将返回一个 MergeIntoWriter 实例，包含以下方法
