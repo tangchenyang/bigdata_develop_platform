@@ -1528,7 +1528,7 @@ todo 为本章节添加 Example
 ###### delete
 
 ##### whenNotMatched
-返回一个 WhenMatched 实例，可对源 DataFrame 中与目标表匹配不到的数据设置下列操作  
+返回一个 whenNotMatched 实例，可对源 DataFrame 中与目标表不匹配的数据设置下列操作  
 ###### insertAll
 ###### insert
 
