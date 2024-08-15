@@ -99,9 +99,57 @@ scala> df.show
 ```
 ### 读取外部系统
 #### 通过 jdbc 读取数据库 
-todo 
+通过 jdbc 协议将数据从外部数据库系统如 MySQL/Postgres 等读取为 DataFrame  
+本例子中先将 DataFrame 通过 [jdbc](#jdbc) 写入 MySQL 后，再从 MySQL 中读取数据，需要使用 MySQL 驱动来连接本地的 MySQL 数据库，因此需要将相应的驱动包加入 classpath，比如：
+```shell
+spark-shell --packages "mysql:mysql-connector-java:8.0.28" 
+```
+
+``` 
+scala> case class Person(id: Int, name: String)
+scala> val df = spark.createDataFrame(List(1, 2, 3).map(x => Person(x, "Name" + x)))
+
+scala> val connectionProperties = new java.util.Properties()
+scala> connectionProperties.put("user", "root")
+scala> connectionProperties.put("password", "123456")
+scala> connectionProperties.put("driver", "com.mysql.jdbc.Driver")
+
+scala> df.write.jdbc(
+  url="jdbc:mysql://localhost:3306/test?createDatabaseIfNotExist=true", 
+  table="test_table__jdbc",
+  connectionProperties=connectionProperties
+)
+
+scala> spark.read.jdbc(
+  url="jdbc:mysql://localhost:3306/test?createDatabaseIfNotExist=true", 
+  table="test_table__jdbc",
+  properties=connectionProperties
+).show
++---+-----+
+| id| name|
++---+-----+
+|  2|Name2|
+|  1|Name1|
+|  3|Name3|
++---+-----+
+```
+
 #### 读取外部文件系统
-todo 
+从外部文件系统（如 HDFS，S3等）将数据读取为 DataFrame
+本例子中先将 DataFrame 通过 [csv](#csv) 写入 HDFS 后，再从 HDFS 中读取数据  
+``` 
+scala> df.write.mode("overwrite").option("header", "true").csv("hdfs:///test_write/test_csv")
+
+scala> spark.read.format("csv").option("header", "true").load("hdfs:///test_write/test_csv").show
++---+-----+
+| id| name|
++---+-----+
+|  1|Name1|
+|  2|Name2|
+|  3|Name3|
++---+-----+
+```
+
 
 ## Transformation 算子
 ### 基础转换
@@ -438,9 +486,7 @@ scala> transformed.show
 #### coalesce
 减少 DataFrame 的分区到目标数量，与 [RDD - coalesce](spark-rdd.md#coalesce) 的行为一致
 #### repartitionByRange
-todo 
-
-
+todo 待补充
 
 ### 集合运算
 #### join
@@ -876,7 +922,8 @@ scala> df.cube("id", "name", "age").count().show
 
 ```
 #### groupingSets  Spark 4.0 + 
-todo 
+todo 待补充
+
 #### distinct
 对 DataFrame 进行去重，完全重复的数据将仅保留一条
 ``` 
@@ -1247,23 +1294,10 @@ scala> spark.read.format("csv").option("header", "true").load("hdfs:///test_writ
 - Append: 向目标资源中追加记录，saveMode 为 `append` 即表示 Append 语义
 - Ignore: 当目标资源已存在时，将不做任何操作，saveMode 为 `ingore` 即表示 Ignore 语义
 - ErrorIfExists: 当目标资源已存在时，将抛出异常，saveMode 为 `error`, `errorifexists`, `default` 均表示 ErrorIfExists 语义
-##### format
-- jdbc
-- json
-- parquet
-- orc
-- text
-- csv
-- xml 
-
-##### option
-##### partitionBy 
-##### bucketBy
-##### sortBy
-##### clusterBy
 
 #### writeTo v2
-DataFrame.writeTo 方法将返回一个 DataFrameWriterV2 实例，包含以下方法  
+DataFrame.writeTo(tableName) 方法将返回一个 DataFrameWriterV2 实例，用于操作 V2 的表 (Transactional Tables)  
+todo 待补充  
 ##### create
 ##### replace
 ##### createOrReplace
@@ -1278,7 +1312,8 @@ DataFrame.writeTo 方法将返回一个 DataFrameWriterV2 实例，包含以下�
 
 #### mergeInto spark 4.0 +
 DataFrame.mergeInto 方法将返回一个 MergeIntoWriter 实例，包含以下方法
-todo 
+todo 待补充
+
 
 
 ## 控制算子
