@@ -1326,6 +1326,7 @@ scala> spark.read.format("csv").option("header", "true").load("hdfs:///test_writ
 #### writeTo v2
 DataFrame.writeTo(tableName) 方法将返回一个 DataFrameWriterV2 实例，用于操作 V2 的表（如 DataLake：Iceberg 等）  
 本例子中将采用 Spark Tests 中常用的 InMemoryTable，需先下载 [spark-catalyst_2.12-3.5.1-tests.jar](https://repo1.maven.org/maven2/org/apache/spark/spark-catalyst_2.12/3.5.1/spark-catalyst_2.12-3.5.1-tests.jar)  
+
 启动 spark-shell  
 ```  
 spark-shell --jars spark-catalyst_2.12-3.5.1-tests.jar
@@ -1529,6 +1530,7 @@ DataFrame 提供与 RDD 行为一致的控制算子如:
 - [cache](spark-rdd.md#cache)  
 - [unpersist](spark-rdd.md#unpersist)  
 - [checkpoint](spark-rdd.md#checkpoint)  
+
 除了这些以外，还提供了一些创建 View 的控制类算子  
 ### createTempView   
 为当前 DataFrame 创建临时视图，可用 SQL 语句对其进行访问，在当前 SparkSession 内有效，视图存在时将报错
