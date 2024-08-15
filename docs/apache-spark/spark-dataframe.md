@@ -1519,8 +1519,29 @@ scala> spark.table("in_mem_catalog.test_write_to__overwrite_partitions").show
 ```
 
 #### mergeInto spark 4.0 +
-DataFrame.mergeInto 方法将返回一个 MergeIntoWriter 实例，包含以下方法
-todo 待补充
+DataFrame.mergeInto 方法将按照指定的条件与指定的目标进行关联，将返回一个 MergeIntoWriter 实例，包含以下方法   
+todo 为本章节添加 Example  
+##### whenMatched
+返回一个 WhenMatched 实例，可对目标表中与源 DataFrame 匹配的数据设置下列操作  
+###### updateAll
+###### update
+###### delete
+
+##### whenNotMatched
+返回一个 WhenMatched 实例，可对源 DataFrame 中与目标表匹配不到的数据设置下列操作  
+###### insertAll
+###### insert
+
+##### whenNotMatchedBySource
+返回一个 WhenNotMatchedBySource 实例，可对目标表中与源 DataFrame 不匹配的数据设置下列操作  
+###### updateAll
+###### update
+###### delete
+
+##### withSchemaEvolution
+启用自动 Schema 演进  
+##### merge
+真正的 action 算子，根据上面的设置，执行最终的 merge 操作  
 
 
 
