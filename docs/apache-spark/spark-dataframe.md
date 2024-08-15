@@ -1324,7 +1324,7 @@ scala> spark.read.format("csv").option("header", "true").load("hdfs:///test_writ
 - ErrorIfExists: 当目标资源已存在时，将抛出异常，saveMode 为 `error`, `errorifexists`, `default` 均表示 ErrorIfExists 语义
 
 #### writeTo v2
-DataFrame.writeTo(tableName) 方法将返回一个 DataFrameWriterV2 实例，用于操作 V2 的表（如 DataLake：Iceberg 等） 
+DataFrame.writeTo(tableName) 方法将返回一个 DataFrameWriterV2 实例，用于操作 V2 的表（如 DataLake：Iceberg 等）  
 本例子中将采用 Spark Tests 中常用的 InMemoryTable，需先下载 [spark-catalyst_2.12-3.5.1-tests.jar](https://repo1.maven.org/maven2/org/apache/spark/spark-catalyst_2.12/3.5.1/spark-catalyst_2.12-3.5.1-tests.jar)  
 启动 spark-shell  
 ```  
