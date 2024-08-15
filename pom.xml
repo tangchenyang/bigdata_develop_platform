@@ -7,51 +7,45 @@
     <groupId>org.example</groupId>
     <artifactId>bigdata_develop_platform</artifactId>
     <packaging>pom</packaging>
+    <name>bigdata_develop_platform</name>
     <version>1.0-SNAPSHOT</version>
 
+    <modules>
+        <module>spark-example</module>
+    </modules>
+
+
     <properties>
-        <scala.version>2.12</scala.version>
+        <scala.compat.version>2.12</scala.compat.version>
+        <scala.version>2.12.17</scala.version>
+        <spark.version>3.5.0</spark.version>
     </properties>
 
     <dependencies>
-        <!-- spark -->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.12</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_2.12</artifactId>
-            <version>3.0.1</version>
-        </dependency>
 
-        <!-- scala -->
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_${scala.version}</artifactId>
-            <version>3.0.5</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- Scala -->
         <dependency>
             <groupId>org.scala-lang</groupId>
-            <artifactId>scala-compiler</artifactId>
-            <version>2.12.12</version>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
         </dependency>
 
-        <!-- graphviz -->
+        <!-- Spark -->
         <dependency>
-            <groupId>guru.nidi</groupId>
-            <artifactId>graphviz-java</artifactId>
-            <version>0.16.0</version>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
     </dependencies>
-
 
 </project>
