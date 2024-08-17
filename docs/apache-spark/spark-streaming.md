@@ -22,8 +22,9 @@ val ssc = new StreamingContext(sparkConf, Seconds(1))
 #### socketTextStream
 根据指定的 hostname 和 port 创建一个基于 TCP Socket 的文本数据流   
 Example: [sparkstream/SocketTextStreamExample](/spark-example/src/main/scala/org/exmaple/spark/sparkstreaming/SocketTextStreamExample.scala)
-``` scala 
+```scala 
 val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
 ```
 #### socketStream
 与 [socketTextStream](#socketTextStream) 类似，但可以支持自定义的 converter，来将字节流转换为类对象  
@@ -48,15 +49,16 @@ def convertBytesToWords(inputStream: InputStream): Iterator[WordCount] = {
 val socketWordCountDStream = ssc.socketStream[WordCount](
   "localhost", 9999, convertBytesToWords, StorageLevel.MEMORY_AND_DISK_SER_2
 )
+socketWordCountDStream.print()
 ```
+
 ### 消息队列
 Spark Streaming 支持与消息队列系统集成，如 Kafka 等  
 #### Kafka
 根据指定的 Kafka Topic 创建一个持续消费 Kafka Message 的 DStream  
 Spark Streaming 与 Kafka 集成需要引入 `org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1` 依赖  
 Example: [sparkstream/KafkaStreamExample](/spark-example/src/main/scala/org/exmaple/spark/sparkstreaming/KafkaStreamExample.scala)
-``` 
-
+```scala
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.streaming.dstream.InputDStream
@@ -84,6 +86,14 @@ val kafkaMessageDStream = kafkaDStream.map(_.value)
 kafkaMessageDStream.print()
 ```
 ### 文件系统
+#### textFileStream
+根据指定的文件系统目录创建一个 DStream，用来监控目录中的新添加的文件，并将这些新文件的每一行读取为 DStream 中的每一条记录  
+Example: [sparkstream/TextFileStreamExample](/spark-example/src/main/scala/org/exmaple/spark/sparkstreaming/TextFileStreamExample.scala)
+
+```scala
+val textFileStream = ssc.textFileStream("/tmp/spark/logs/")
+textFileStream.print()
+```
 ### 自定义 Receiver 
 #### receiverStream
 
