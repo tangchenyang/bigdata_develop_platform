@@ -96,16 +96,44 @@ textFileStream.print()
 ```
 ### 自定义 Receiver 
 #### receiverStream
+todo 
 
-- socketTextStream
-- socketStream
-- rawSocketStream
-- fileStream
-- textFileStream
-- binaryRecordsStream
-- queueStream
-- 
 ## Transformation 算子
+### 基本转换
+#### map
+#### flatMap
+#### filter
+#### slice
+
+
+### 分区转换
+#### repartition
+#### mapPartitions
+#### union
+
+
+### 聚合操作
+#### glom
+#### reduce
+#### count
+#### countByValue
+
+
+### 窗口函数
+#### window
+#### reduceByWindow
+#### countByWindow
+#### slice
+
 ## Action 算子
+### 转换为 Java 集合
+#### foreachRDD
+#### print
+
+### 输出到外部系统
+#### print
+#### saveAsTextFiles
+#### saveAsObjectFiles
+
 ## 控制算子 
 
