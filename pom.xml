@@ -46,6 +46,11 @@
             <artifactId>spark-streaming_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-0-10_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

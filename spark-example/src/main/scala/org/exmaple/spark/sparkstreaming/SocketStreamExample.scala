@@ -1,21 +1,23 @@
 package org.exmaple.spark.sparkstreaming
 
+import org.apache.spark._
 import org.apache.spark.storage.StorageLevel
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.dstream.ReceiverInputDStream
 
-object SockerStream {
+import java.io._
+import scala.collection.JavaConverters._
+
+object SocketStreamExample {
   def main(args: Array[String]): Unit = {
-
-    import org.apache.spark._
-    import org.apache.spark.streaming._
-
     // create spark streaming context
     val sparkConf = new SparkConf().setMaster("local[*]").setAppName(this.getClass.getName)
     val ssc = new StreamingContext(sparkConf, Seconds(1))
 
-    // define WordCount converter
+    // define class WordCount
     case class WordCount(word: String, count: Int) extends Serializable
-    import java.io._
-    import collection.JavaConverters._
+
+    // define custom converter
     def convertBytesToWords(inputStream: InputStream): Iterator[WordCount] = {
       val dataInputStream = new BufferedReader(
         new InputStreamReader(inputStream, "UTF-8")
@@ -27,7 +29,7 @@ object SockerStream {
     }
 
     // create socket stream
-    val socketWordCountDStream = ssc.socketStream[WordCount](
+    val socketWordCountDStream: ReceiverInputDStream[WordCount] = ssc.socketStream[WordCount](
       "localhost", 9999, convertBytesToWords, StorageLevel.MEMORY_AND_DISK_SER_2
     )
     // count words

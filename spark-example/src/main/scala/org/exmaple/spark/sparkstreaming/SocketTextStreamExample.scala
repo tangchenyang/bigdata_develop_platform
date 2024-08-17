@@ -1,11 +1,11 @@
 package org.exmaple.spark.sparkstreaming
 
-object SockerTextStream {
+import org.apache.spark._
+import org.apache.spark.streaming._
+
+object SocketTextStreamExample {
   def main(args: Array[String]): Unit = {
-
-    import org.apache.spark._
-    import org.apache.spark.streaming._
-
+    // create spark streaming context
     val sparkConf = new SparkConf().setMaster("local[*]").setAppName(this.getClass.getName)
     val ssc = new StreamingContext(sparkConf, Seconds(1))
 

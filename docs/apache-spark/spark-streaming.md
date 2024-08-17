@@ -9,7 +9,7 @@ Spark Streaming 是基于 Spark RDD API 抽象出来的流处理计算框架，�
 ![image](https://github.com/tangchenyang/picx-images-hosting/raw/master/20240816/image.7sn4vpg33o.webp)
 
 ## 创建 DStream 
-DStream 是 Spark Streaming 基于 RDD 高度抽象的数据流 API，数据流可以从多种数据源获取，如 Socket、消息队列 Kafka、文件系统 HDFS/S3 等  
+DStream (Discretized Stream) 是 Spark Streaming 基于 RDD 高度抽象的离散化数据流 API，数据流可以从多种数据源获取，如 Socket、消息队列 Kafka、文件系统 HDFS/S3 等  
 Spark Streaming 的操作都是基于 StreamingContext 的，因此需要先创建一个 sparkStreamingContext(ssc) 实例  
 ```scala
 import org.apache.spark._
@@ -20,18 +20,20 @@ val ssc = new StreamingContext(sparkConf, Seconds(1))
 ```
 ### Socket 
 #### socketTextStream
-根据指定的 hostname 和 port 创建一个基于 TCP Socket 的文本数据流  
+根据指定的 hostname 和 port 创建一个基于 TCP Socket 的文本数据流   
+Example: [sparkstream/SocketTextStreamExample](/spark-example/src/main/scala/org/exmaple/spark/sparkstreaming/SocketTextStreamExample.scala)
 ``` scala 
 val socketTextDStream = ssc.socketTextStream("localhost", 9999)
 ```
 #### socketStream
-与 [socketTextStream](#socketTextStream) 类似，但可以支持自定义的 converter，来将字节流转换为对象  
+与 [socketTextStream](#socketTextStream) 类似，但可以支持自定义的 converter，来将字节流转换为类对象  
+Example: [sparkstream/SocketStreamExample](/spark-example/src/main/scala/org/exmaple/spark/sparkstreaming/SocketTextStreamExample.scala)
 
 ```scala
-// define WordCount converter
+// define class WordCount 
 case class WordCount(word: String, count: Int) extends Serializable
-import java.io._
-import collection.JavaConverters._
+
+// define custom converter
 def convertBytesToWords(inputStream: InputStream): Iterator[WordCount] = {
   val dataInputStream = new BufferedReader(
     new InputStreamReader(inputStream, "UTF-8")
@@ -48,6 +50,39 @@ val socketWordCountDStream = ssc.socketStream[WordCount](
 )
 ```
 ### 消息队列
+Spark Streaming 支持与消息队列系统集成，如 Kafka 等  
+#### Kafka
+根据指定的 Kafka Topic 创建一个持续消费 Kafka Message 的 DStream  
+Spark Streaming 与 Kafka 集成需要引入 `org.apache.spark:spark-streaming-kafka-0-10_2.12:3.5.1` 依赖  
+Example: [sparkstream/KafkaStreamExample](/spark-example/src/main/scala/org/exmaple/spark/sparkstreaming/KafkaStreamExample.scala)
+``` 
+
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.spark.streaming.dstream.InputDStream
+import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
+
+
+val subscribeTopics = Array("test-topic")
+val kafkaParams = Map[String, Object](
+  "bootstrap.servers" -> "localhost:9092",
+  "key.deserializer" -> classOf[StringDeserializer],
+  "value.deserializer" -> classOf[StringDeserializer],
+  "group.id" -> "test_group",
+  "auto.offset.reset" -> "earliest",
+  "enable.auto.commit" -> "false"
+)
+
+val kafkaDStream: InputDStream[ConsumerRecord[String, String]] = KafkaUtils.createDirectStream[String, String](
+  ssc,
+  LocationStrategies.PreferConsistent,
+  ConsumerStrategies.Subscribe[String, String](subscribeTopics, kafkaParams)
+)
+
+val kafkaMessageDStream = kafkaDStream.map(_.value)
+
+kafkaMessageDStream.print()
+```
 ### 文件系统
 ### 自定义 Receiver 
 #### receiverStream
