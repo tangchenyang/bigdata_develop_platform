@@ -101,28 +101,39 @@ todo
 ## Transformation 算子
 ### 基本转换
 #### map
+对 DStream 中的每一条记录，根据给定的 U => V 函数做转换操作  
 #### flatMap
+对 DStream 中的每一条记录，根据给定的 U => V 函数做转换操作，同时当 V 为集合时，将集合中的元素展开成多行  
 #### filter
+对 DStream 中的每一条记录做过滤操作
 #### slice
-
+todo 
+#### union
+将当前 DStream 与另一个 DStream 的数据统一起来，返回一个新的 DStream，两个 DStream 的滑动窗口间隔必须相同  
 
 ### 分区转换
 #### repartition
+将 DStream 每个批次中的 RDD 的 partition 到目标数量，对数据进行随机重新分布，会产生 Shuffle
 #### mapPartitions
-#### union
+对 DStream 每个批次中的 RDD 的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器，因此这个转换函数应是 iterator => iterator 的映射
 
 
 ### 聚合操作
 #### glom
 #### reduce
+对 DStream 每个批次中的 RDD 做聚合操作  
 #### count
+对 DStream 每个批次中的 RDD 求 count 
 #### countByValue
-
+对 DStream 每个批次中的 RDD 的每一条记录求 count   
 
 ### 窗口函数
 #### window
+生成一个新的 DStream，这个 DStream 以指定时间长度的滑动窗口将数据聚集起来，滑动窗口的时间宽度必须是当前 DStream 的计算间隔的整数倍，其中将包含该滑动窗口时间内的所有记录  
 #### reduceByWindow
+对 DStream 每个窗口中的 RDD 做聚合操作
 #### countByWindow
+对 DStream 每个窗口中的 RDD 求 count
 #### slice
 
 ## Action 算子
