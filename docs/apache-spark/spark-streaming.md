@@ -139,12 +139,22 @@ todo
 ## Action 算子
 ### 转换为 Java 集合
 #### foreachRDD
+对 DStream 每个批次中的 RDD 做遍历操作，等效于 RDD 的 [foreach](spark-rdd.md#foreach)
 #### print
+将 DStream 每个批次中的 RDD 的前 10 条记录输出到控制台
 
 ### 输出到外部系统
-#### print
 #### saveAsTextFiles
+将 DStream 每个批次中的 RDD 以 TEXT 文件格式写入 Hadoop 支持的外部文件系统
 #### saveAsObjectFiles
+将 DStream 每个批次中的 RDD 序列化之后，以 Hadoop SequenceFile 文件格式写入 Hadoop 支持的外部文件系统
 
 ## 控制算子 
+### persist
+将 DStream 每个批次中的 RDD 缓存到内存或者磁盘中，提升作业性能
+### cache
+等同于缓存级别为 `MEMORY_ONLY_SER` 的 [persist](#persist)
+### checkpoint 
+将当前的 DStream 按设置的间隔保存在设置的 checkpointDir 中，当程序重启时，将从最新 checkpoint 处继续运行 
+
 
