@@ -16,7 +16,7 @@ import org.apache.spark._
 import org.apache.spark.streaming._
 
 val sparkConf = new SparkConf().setMaster("local[*]")
-val ssc = new StreamingContext(sparkConf, Seconds(1))
+val ssc = new StreamingContext(sparkConf, Seconds(5))
 ```
 ### Socket 
 #### socketTextStream
@@ -26,6 +26,23 @@ Example: [sparkstream/SocketTextStreamExample](/spark-example/src/main/scala/org
 val socketTextDStream = ssc.socketTextStream("localhost", 9999)
 socketTextDStream.print()
 ```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据  
+``` 
+$ nc -lk 9999
+a
+b
+c
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据 
+``` 
+-------------------------------------------
+Time: 1724326720000 ms
+-------------------------------------------
+a
+b
+c
+```
+
 #### socketStream
 与 [socketTextStream](#socketTextStream) 类似，但可以支持自定义的 converter，来将字节流转换为类对象  
 Example: [sparkstream/SocketStreamExample](/spark-example/src/main/scala/org/exmaple/spark/sparkstreaming/SocketTextStreamExample.scala)
@@ -51,6 +68,25 @@ val socketWordCountDStream = ssc.socketStream[WordCount](
 )
 socketWordCountDStream.print()
 ```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+a
+b b
+c c c
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据
+``` 
+-------------------------------------------
+Time: 1724326945000 ms
+-------------------------------------------
+WordCount(a,1)
+WordCount(b,1)
+WordCount(b,1)
+WordCount(c,1)
+WordCount(c,1)
+WordCount(c,1)
+```
 
 ### 消息队列
 Spark Streaming 支持与消息队列系统集成，如 Kafka 等  
@@ -63,7 +99,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
-
 
 val subscribeTopics = Array("test-topic")
 val kafkaParams = Map[String, Object](
@@ -85,6 +120,24 @@ val kafkaMessageDStream = kafkaDStream.map(_.value)
 
 kafkaMessageDStream.print()
 ```
+启动程序后，使用 kafka-producer 命令往本地的 kafka 发送一些消息 
+``` 
+$ kafka-console-producer.sh --broker-list localhost:9092 --topic test-topic
+>a
+>bb
+>ccc
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据
+``` 
+-------------------------------------------
+Time: 1724327280000 ms
+-------------------------------------------
+a 
+bb
+ccc
+```
+
 ### 文件系统
 #### textFileStream
 根据指定的文件系统目录创建一个 DStream，用来监控目录中的新添加的文件，并将这些新文件的每一行读取为 DStream 中的每一条记录  
@@ -94,6 +147,22 @@ Example: [sparkstream/TextFileStreamExample](/spark-example/src/main/scala/org/e
 val textFileStream = ssc.textFileStream("/tmp/spark/logs/")
 textFileStream.print()
 ```
+启动程序后，使用 Linux 命令往该目录下写入一些文件
+``` 
+$ mkdir -p /tmp/spark/logs/
+$ echo "a" > /tmp/spark/logs/a.txt
+$ echo "bbb" > /tmp/spark/logs/b.txt
+$ echo "ccc" > /tmp/spark/logs/c.txt
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据
+``` 
+-------------------------------------------
+Time: 1724327465000 ms
+-------------------------------------------
+ccc
+bbb
+a
+```
 ### 自定义 Receiver 
 #### receiverStream
 todo 
@@ -102,31 +171,302 @@ todo
 ### 基本转换
 #### map
 对 DStream 中的每一条记录，根据给定的 U => V 函数做转换操作  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.map(_.toUpperCase).print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+AAA
+BBB
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及转换后的数据  
+``` 
+-------------------------------------------
+Time: 1724327765000 ms
+-------------------------------------------
+AAA
+BBB
+
+-------------------------------------------
+Time: 1724327765000 ms
+-------------------------------------------
+aaa
+bbb
+```
 #### flatMap
 对 DStream 中的每一条记录，根据给定的 U => V 函数做转换操作，同时当 V 为集合时，将集合中的元素展开成多行  
+
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.flatMap(_.split(" ")).print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+a a
+b b b
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及转换后的数据
+``` 
+-------------------------------------------
+Time: 1724327990000 ms
+-------------------------------------------
+a a
+b b b
+
+-------------------------------------------
+Time: 1724327990000 ms
+-------------------------------------------
+a
+a
+b
+b
+b
+```
 #### filter
 对 DStream 中的每一条记录做过滤操作
-#### slice
-todo 
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.filter(_.length >= 2).print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+a
+bb
+ccc
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及转换后的数据
+``` 
+-------------------------------------------
+Time: 1724328160000 ms
+-------------------------------------------
+a
+bb
+ccc
+
+-------------------------------------------
+Time: 1724328160000 ms
+-------------------------------------------
+bb
+ccc
+```
 #### union
 将当前 DStream 与另一个 DStream 的数据统一起来，返回一个新的 DStream，两个 DStream 的滑动窗口间隔必须相同  
+```scala
+val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
+val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
 
+socketTextDStream9999.print()
+socketTextDStream9998.print()
+socketTextDStream9999.union(socketTextDStream9998).print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+bb
+
+$ nc -lk 9998
+11
+22
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 union 后的数据
+``` 
+-------------------------------------------
+Time: 1724328350000 ms
+-------------------------------------------
+aa
+bb
+
+-------------------------------------------
+Time: 1724328350000 ms
+-------------------------------------------
+11
+22
+
+-------------------------------------------
+Time: 1724328350000 ms
+-------------------------------------------
+aa
+bb
+11
+22
+```
 ### 分区转换
 #### repartition
 将 DStream 每个批次中的 RDD 的 partition 到目标数量，对数据进行随机重新分布，会产生 Shuffle
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.foreachRDD(rdd => println("number of partitions before repartition: " + rdd.partitions.length))
+socketTextDStream.repartition(10).foreachRDD(rdd => println("number of partitions after repartition: " + rdd.partitions.length))
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+bb
+```
+Spark Streaming 任务的控制台将打印出 repartition 前后的分区数
+``` 
+number of partitions before repartition: 2
+number of partitions after repartition: 10
+```
 #### mapPartitions
 对 DStream 每个批次中的 RDD 的每一个分区做转换操作，每个分区中的元素被封装成一个迭代器，因此这个转换函数应是 iterator => iterator 的映射
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.mapPartitions(iter => iter.map(_.toUpperCase)).print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+bb
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及转换后的数据
 
+``` 
+-------------------------------------------
+Time: 1724329090000 ms
+-------------------------------------------
+aa
+bb
+
+-------------------------------------------
+Time: 1724329090000 ms
+-------------------------------------------
+AA
+BB
+```
 
 ### 聚合操作
 #### glom
+将 DStream 每个批次中的 RDD 的每个分区中的所有记录合并成一个 Array  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.glom().map(_.mkString(", ")).print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+bb
+cc
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 glom 后的数据
+
+``` 
+-------------------------------------------
+Time: 1724329215000 ms
+-------------------------------------------
+aa
+bb
+cc
+
+-------------------------------------------
+Time: 1724329215000 ms
+-------------------------------------------
+aa, bb
+cc
+```
 #### reduce
 对 DStream 每个批次中的 RDD 做聚合操作  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.reduce(_ + _).print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+bb
+cc
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 reduce 后的数据
+
+``` 
+-------------------------------------------
+Time: 1724329430000 ms
+-------------------------------------------
+aa
+bb
+cc
+
+-------------------------------------------
+Time: 1724329430000 ms
+-------------------------------------------
+aabbcc
+```
 #### count
 对 DStream 每个批次中的 RDD 求 count 
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.count().print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+bb
+cc
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 count 后的数据
+
+``` 
+-------------------------------------------
+Time: 1724329505000 ms
+-------------------------------------------
+aa
+bb
+cc
+
+-------------------------------------------
+Time: 1724329505000 ms
+-------------------------------------------
+3
+```
 #### countByValue
 对 DStream 每个批次中的 RDD 的每一条记录求 count   
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.count().print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+aa
+bb
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及汇总后的数据
 
+``` 
+-------------------------------------------
+Time: 1724329590000 ms
+-------------------------------------------
+aa
+aa
+bb
+
+-------------------------------------------
+Time: 1724329590000 ms
+-------------------------------------------
+(aa,2)
+(bb,1)
+
+```
 ### 窗口函数
 #### window
 生成一个新的 DStream，这个 DStream 以指定时间长度的滑动窗口将数据聚集起来，滑动窗口的时间宽度必须是当前 DStream 的计算间隔的整数倍，其中将包含该滑动窗口时间内的所有记录  
