@@ -11,7 +11,7 @@ object KafkaStreamExample {
   def main(args: Array[String]): Unit = {
     // create spark streaming context
     val sparkConf = new SparkConf().setMaster("local[*]").setAppName(this.getClass.getName)
-    val ssc = new StreamingContext(sparkConf, Seconds(1))
+    val ssc = new StreamingContext(sparkConf, Seconds(5))
 
     // define Kafka parameters
     val subscribeTopics = Array("test-topic")

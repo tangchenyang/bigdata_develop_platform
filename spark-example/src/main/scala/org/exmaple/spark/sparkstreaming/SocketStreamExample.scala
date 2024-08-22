@@ -12,7 +12,7 @@ object SocketStreamExample {
   def main(args: Array[String]): Unit = {
     // create spark streaming context
     val sparkConf = new SparkConf().setMaster("local[*]").setAppName(this.getClass.getName)
-    val ssc = new StreamingContext(sparkConf, Seconds(1))
+    val ssc = new StreamingContext(sparkConf, Seconds(5))
 
     // define class WordCount
     case class WordCount(word: String, count: Int) extends Serializable
@@ -32,14 +32,9 @@ object SocketStreamExample {
     val socketWordCountDStream: ReceiverInputDStream[WordCount] = ssc.socketStream[WordCount](
       "localhost", 9999, convertBytesToWords, StorageLevel.MEMORY_AND_DISK_SER_2
     )
-    // count words
-    val wordCounts = socketWordCountDStream
-      .map(wc => (wc.word, wc.count))
-      .reduceByKey(_ + _)
-      .map { case (word, count) => new WordCount(word, count) }
 
     // print in console
-    wordCounts.print()
+    socketWordCountDStream.print()
 
     // start streaming job
     ssc.start()
