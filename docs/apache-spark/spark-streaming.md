@@ -257,49 +257,69 @@ Time: 1724328160000 ms
 bb
 ccc
 ```
-#### union
-将当前 DStream 与另一个 DStream 的数据统一起来，返回一个新的 DStream，两个 DStream 的滑动窗口间隔必须相同  
+
+#### mapValues
+对  K-V Pair 型 DStream 中的每一条记录的 values 进行转换  
+***只能作用于 K-V Pair 型 DStream***  
 ```scala
-val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
-val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
-
-socketTextDStream9999.print()
-socketTextDStream9998.print()
-socketTextDStream9999.union(socketTextDStream9998).print()
-
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.map((_, 1)).mapValues(_ * 2).print()
 ```
-启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
 ``` 
 $ nc -lk 9999
-aa
-bb
-
-$ nc -lk 9998
-11
-22
+a
+b
 ```
-Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 union 后的数据
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及转换后的数据  
 ``` 
 -------------------------------------------
-Time: 1724328350000 ms
+Time: 1724328160000 ms
 -------------------------------------------
-aa
-bb
-
+a
+b
 -------------------------------------------
-Time: 1724328350000 ms
+Time: 1724328160000 ms
 -------------------------------------------
-11
-22
-
--------------------------------------------
-Time: 1724328350000 ms
--------------------------------------------
-aa
-bb
-11
-22
+(a,2)
+(b,2)
 ```
+
+#### flatMapValues
+对 K-V Pair 型 DStream 的每一条记录中的列做转换操作，同时结果将数组中的元素展开成多行  
+***只能作用于 K-V Pair 型 DStream***  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .map(line => (line, line))
+  .flatMapValues(_.split(" ").toList)
+  .print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+a1 a2
+b1 b2
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及转换后的数据
+``` 
+-------------------------------------------
+Time: 1724400550000 ms
+-------------------------------------------
+a1 a2
+b1 b2
+-------------------------------------------
+Time: 1724400550000 ms
+-------------------------------------------
+(a1 a2,a1)
+(a1 a2,a2)
+(b1 b2,b1)
+(b1 b2,b2)
+```
+
 ### 分区转换
 #### repartition
 将 DStream 每个批次中的 RDD 的 partition 到目标数量，对数据进行随机重新分布，会产生 Shuffle
@@ -468,6 +488,60 @@ Time: 1724329590000 ms
 (bb,1)
 
 ```
+#### groupByKey 
+#### reduceByKey
+#### combineByKey
+
+### 集合操作
+#### union
+将当前 DStream 与另一个 DStream 的数据统一起来，返回一个新的 DStream，两个 DStream 的滑动窗口间隔必须相同
+```scala
+val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
+val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
+
+socketTextDStream9999.print()
+socketTextDStream9998.print()
+socketTextDStream9999.union(socketTextDStream9998).print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+``` 
+$ nc -lk 9999
+aa
+bb
+
+$ nc -lk 9998
+11
+22
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 union 后的数据
+``` 
+-------------------------------------------
+Time: 1724328350000 ms
+-------------------------------------------
+aa
+bb
+
+-------------------------------------------
+Time: 1724328350000 ms
+-------------------------------------------
+11
+22
+
+-------------------------------------------
+Time: 1724328350000 ms
+-------------------------------------------
+aa
+bb
+11
+22
+```
+#### cogroup
+#### join
+#### leftOuterJoin
+#### rightOuterJoin
+#### fullOuterJoin
+
 ### 窗口函数
 #### window
 生成一个新的 DStream，这个 DStream 以固定的时间宽度(windowDuration)以及滑动时间(slideDuration)的滑动窗口将数据聚集起来  
@@ -612,6 +686,10 @@ Time: 1724395985000 ms  // 第二个滑动窗口中的数据
 3
 
 ```
+#### groupByKeyAndWindow
+#### reduceByKeyAndWindow
+
+
 #### slice
 
 ## Action 算子
@@ -626,6 +704,9 @@ Time: 1724395985000 ms  // 第二个滑动窗口中的数据
 将 DStream 每个批次中的 RDD 以 TEXT 文件格式写入 Hadoop 支持的外部文件系统
 #### saveAsObjectFiles
 将 DStream 每个批次中的 RDD 序列化之后，以 Hadoop SequenceFile 文件格式写入 Hadoop 支持的外部文件系统
+## 状态算子
+### mapWithState 
+### updateStateByKey 
 
 ## 控制算子 
 ### persist
