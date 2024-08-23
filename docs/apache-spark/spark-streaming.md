@@ -832,7 +832,7 @@ $ nc -lk 9998
 4,D
 
 ```
-Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 leftOuterJoin 后的数据
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 rightOuterJoin 后的数据
 ``` 
 -------------------------------------------
 Time: 1724404360000 ms
@@ -888,7 +888,7 @@ $ nc -lk 9998
 4,D
 
 ```
-Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 leftOuterJoin 后的数据
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 fullOuterJoin 后的数据
 ``` 
 -------------------------------------------
 Time: 1724404360000 ms
