@@ -17,6 +17,7 @@ import org.apache.spark.streaming._
 
 val sparkConf = new SparkConf().setMaster("local[*]")
 val ssc = new StreamingContext(sparkConf, Seconds(5))
+ssc.checkpoint("checkpoint")
 ```
 ### Socket 
 #### socketTextStream
@@ -469,11 +470,148 @@ Time: 1724329590000 ms
 ```
 ### 窗口函数
 #### window
-生成一个新的 DStream，这个 DStream 以指定时间长度的滑动窗口将数据聚集起来，滑动窗口的时间宽度必须是当前 DStream 的计算间隔的整数倍，其中将包含该滑动窗口时间内的所有记录  
+生成一个新的 DStream，这个 DStream 以固定的时间宽度(windowDuration)以及滑动时间(slideDuration)的滑动窗口将数据聚集起来  
+滑动窗口中将包含该窗口时间宽度内的所有记录，其时间宽度和滑动时间必须是当前 DStream 的计算间隔的整数倍  
+- windowDuration: 滑动窗口的时间宽度。假设其值计算间隔的两倍，那么每当滑动窗口触发时，窗口内的数据将包含当前微批以及上一个微批中的所有记录  
+- slideDuration：滑动窗口的滑动时间。即生成新的滑动窗口的时间间隔   
+
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+// 滑动窗口时间设置为 10 s (当前计算间隔的两倍)
+socketTextDStream
+  .window(windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+  .print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据，其中 `aa` 和 `bb` 发完等待5秒再发 `cc` 确保他们被两个批次处理
+``` 
+$ nc -lk 9999
+aa
+bb
+cc
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的当前微批的数据，以及滑动窗口中数据。  
+由于滑动设置为计算间隔的两倍，因此滑动窗口中将同时包含当前的微批和上一个微批中的数据  
+
+``` 
+-------------------------------------------
+Time: 1724380055000 ms  // 第一个微批中的数据
+-------------------------------------------
+aa
+bb
+
+-------------------------------------------
+Time: 1724380055000 ms  // 第一个滑动窗口中的数据。 由于上一个微批中无数据，因此当前滑动窗口中的数据等于当前微批中的数据 `aa` `bb`
+-------------------------------------------
+aa
+bb
+
+-------------------------------------------
+Time: 1724380060000 ms  // 第二个微批中的数据
+-------------------------------------------
+cc
+
+-------------------------------------------
+Time: 1724380060000 ms  // 第二个滑动窗口中的数据。 当前滑动窗口中中包含当前微批中的数据 `cc` 与上一个微批中的数据 `aa` `bb`
+-------------------------------------------
+aa
+bb
+cc
+
+```
 #### reduceByWindow
-对 DStream 每个窗口中的 RDD 做聚合操作
+对 DStream 每个滑动窗口中的 RDD 做聚合操作，相当于先对 DStream 开窗 [window](#window)，再对每个滑动窗口进行 [reduce](#reduce) 操作  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .reduceByWindow(_ + _, windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+  .print()
+//socketTextDStream
+//  .window(windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+//  .reduce(_ + _)
+//  .print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据，其中 `aa` 和 `bb` 发完等待5秒再发 `cc` 确保他们被两个批次处理
+``` 
+$ nc -lk 9999
+aa
+bb
+cc
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的当前微批的数据，以及滑动窗口中的聚合数据   
+``` 
+-------------------------------------------
+Time: 1724395980000 ms  // 第一个微批中的数据
+-------------------------------------------
+aa
+bb
+
+-------------------------------------------
+Time: 1724395980000 ms  // 第一个滑动窗口中的数据
+-------------------------------------------
+aabb
+
+-------------------------------------------
+Time: 1724395985000 ms  // 第二个微批中的数据
+-------------------------------------------
+cc
+
+-------------------------------------------
+Time: 1724395985000 ms  // 第二个滑动窗口中的数据
+-------------------------------------------
+aabbcc
+
+```
 #### countByWindow
-对 DStream 每个窗口中的 RDD 求 count
+对 DStream 每个窗口中的 RDD 求 count，相当于先对 DStream 开窗 [window](#window)，再对每个滑动窗口进行 [count](#count) 操作
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .countByWindow(windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+  .print()
+//socketTextDStream
+//  .window(windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+//  .count()
+//  .print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据，其中 `aa` 和 `bb` 发完等待5秒再发 `cc` 确保他们被两个批次处理
+``` 
+$ nc -lk 9999
+aa
+bb
+cc
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的当前微批的数据，以及滑动窗口中的聚合数据
+``` 
+-------------------------------------------
+Time: 1724395980000 ms  // 第一个微批中的数据
+-------------------------------------------
+aa
+bb
+
+-------------------------------------------
+Time: 1724395980000 ms  // 第一个滑动窗口中的数据
+-------------------------------------------
+2
+
+-------------------------------------------
+Time: 1724395985000 ms  // 第二个微批中的数据
+-------------------------------------------
+cc
+
+-------------------------------------------
+Time: 1724395985000 ms  // 第二个滑动窗口中的数据
+-------------------------------------------
+3
+
+```
 #### slice
 
 ## Action 算子
