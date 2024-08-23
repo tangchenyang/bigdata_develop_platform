@@ -604,7 +604,8 @@ Time: 1724402650000 ms
 
 ### 集合操作
 #### union
-将当前 DStream 与另一个 DStream 的数据统一起来，返回一个新的 DStream，两个 DStream 的滑动窗口间隔必须相同
+将当前 DStream 与另一个 DStream 的数据统一起来，返回一个新的 DStream，两个 DStream 的滑动窗口间隔必须相同  
+***作用于滑动窗口时，两个滑动窗口必须有相同的滑动时间***  
 ```scala
 val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
 val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
@@ -647,10 +648,270 @@ bb
 22
 ```
 #### cogroup
+将两个 DStream 每个批次中的 RDD 按 Key 关联在一起，返回关联后的 DStream，相同 Key 的 value 会被 group 到一个集合中  
+***只能作用于 K-V Pair 型 DStream***  
+***作用于滑动窗口时，两个滑动窗口必须有相同的滑动时间***  
+```scala
+val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
+val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
+
+val kvDStream9999 = socketTextDStream9999.map(line => line.split(",")(0) -> line.split(",")(1))
+val kvDStream9998 = socketTextDStream9998.map(line => line.split(",")(0) -> line.split(",")(1))
+
+socketTextDStream9999.print()
+socketTextDStream9998.print()
+
+kvDStream9999.cogroup(kvDStream9998).print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+``` 
+$ nc -lk 9999
+a,a1
+a,a2
+b,b1
+
+$ nc -lk 9998
+a,A1
+a,A1
+b,B1
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 cogroup 后的数据
+``` 
+-------------------------------------------
+Time: 1724403410000 ms
+-------------------------------------------
+a,a1
+a,a2
+b,b1
+-------------------------------------------
+Time: 1724403410000 ms
+-------------------------------------------
+a,A1
+a,A1
+b,B1
+-------------------------------------------
+Time: 1724403410000 ms
+-------------------------------------------
+(a,(CompactBuffer(a1, a2),CompactBuffer(A1, A1)))
+(b,(CompactBuffer(b1),CompactBuffer(B1)))
+```
+
 #### join
+将当前 DStream 每个批次中的 RDD 与另外的 DStream 对应批次中的 RDD 进行关联,，返回关联后的 DStream，对于重复 value，会单独出现在不同记录中  
+***只能作用于 K-V Pair 型 DStream***
+```scala
+val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
+val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
+
+val kvDStream9999 = socketTextDStream9999.map(line => line.split(",")(0) -> line.split(",")(1))
+val kvDStream9998 = socketTextDStream9998.map(line => line.split(",")(0) -> line.split(",")(1))
+
+socketTextDStream9999.print()
+socketTextDStream9998.print()
+
+kvDStream9999.join(kvDStream9998).print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+``` 
+$ nc -lk 9999
+1,a
+2,b
+
+$ nc -lk 9998
+1,A
+2,B
+2,Bb
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 join 后的数据
+``` 
+-------------------------------------------
+Time: 1724403920000 ms
+-------------------------------------------
+1,a
+2,b
+-------------------------------------------
+Time: 1724403920000 ms
+-------------------------------------------
+1,A
+2,B
+2,Bb
+-------------------------------------------
+Time: 1724403920000 ms
+-------------------------------------------
+(2,(b,B))
+(2,(b,Bb))
+(1,(a,A))
+```
 #### leftOuterJoin
+将当前 DStream 每个批次中的 RDD 与另外的 DStream 对应批次中的 RDD 进行左关联, 结果集中仅包含左 DStream 中的全部记录，右 DStream 中匹配不到的数据置为空  
+即对于每一条记录 (key, value_left), 能匹配到时返回 (key, (value_left, value_right)), 匹配不到时返回(key, (value_left, None))  
+***只能作用于 K-V Pair 型 DStream***  
+***作用于滑动窗口时，两个滑动窗口必须有相同的滑动时间***
+```scala
+val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
+val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
+
+val kvDStream9999 = socketTextDStream9999.map(line => line.split(",")(0) -> line.split(",")(1))
+val kvDStream9998 = socketTextDStream9998.map(line => line.split(",")(0) -> line.split(",")(1))
+
+socketTextDStream9999.print()
+socketTextDStream9998.print()
+
+kvDStream9999.leftOuterJoin(kvDStream9998).print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+``` 
+$ nc -lk 9999
+1,a
+2,b
+3,c
+
+$ nc -lk 9998
+1,A
+2,B
+2,Bb
+4,D
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 leftOuterJoin 后的数据
+``` 
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+1,a
+2,b
+3,c
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+1,A
+2,B
+2,Bb
+4,D
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+(2,(b,Some(B)))
+(2,(b,Some(Bb)))
+(3,(c,None))
+(1,(a,Some(A)))
+```
 #### rightOuterJoin
+将当前 DStream 每个批次中的 RDD 与另外的 DStream 对应批次中的 RDD 进行右关联, 结果集中仅包含右 DStream 中的全部记录，左 DStream 中匹配不到的数据置为空  
+即对于每一条记录 (key, value_left), 能匹配到时返回 (key, (value_left, value_right)), 匹配不到时返回(key, (None, value_right))  
+***只能作用于 K-V Pair 型 DStream***  
+***作用于滑动窗口时，两个滑动窗口必须有相同的滑动时间***
+```scala
+val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
+val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
+
+val kvDStream9999 = socketTextDStream9999.map(line => line.split(",")(0) -> line.split(",")(1))
+val kvDStream9998 = socketTextDStream9998.map(line => line.split(",")(0) -> line.split(",")(1))
+
+socketTextDStream9999.print()
+socketTextDStream9998.print()
+
+kvDStream9999.rightOuterJoin(kvDStream9998).print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+``` 
+$ nc -lk 9999
+1,a
+2,b
+3,c
+
+$ nc -lk 9998
+1,A
+2,B
+2,Bb
+4,D
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 leftOuterJoin 后的数据
+``` 
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+1,a
+2,b
+3,c
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+1,A
+2,B
+2,Bb
+4,D
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+(2,(Some(b),B))
+(2,(Some(b),Bb))
+(4,(None,D))
+(1,(Some(a),A))
+```
+
 #### fullOuterJoin
+将当前 DStream 每个批次中的 RDD 与另外的 DStream 对应批次中的 RDD 进行全关联, 结果集中将包含左右 RDD 中的全部记录，匹配不到的数据置为空  
+即对于每一条记录 (key, value_left), 能匹配到时返回 (key, (value_left, value_right)), 匹配不到时返回(key, (value_left, value_right)) 或 (key, (None, value_right))  
+***只能作用于 K-V Pair 型 DStream***  
+***作用于滑动窗口时，两个滑动窗口必须有相同的滑动时间***
+```scala
+val socketTextDStream9999 = ssc.socketTextStream("localhost", 9999)
+val socketTextDStream9998 = ssc.socketTextStream("localhost", 9998)
+
+val kvDStream9999 = socketTextDStream9999.map(line => line.split(",")(0) -> line.split(",")(1))
+val kvDStream9998 = socketTextDStream9998.map(line => line.split(",")(0) -> line.split(",")(1))
+
+socketTextDStream9999.print()
+socketTextDStream9998.print()
+
+kvDStream9999.fullOuterJoin(kvDStream9998).print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 和 9998 端口发送一些数据
+``` 
+$ nc -lk 9999
+1,a
+2,b
+3,c
+
+$ nc -lk 9998
+1,A
+2,B
+2,Bb
+4,D
+
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及 leftOuterJoin 后的数据
+``` 
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+1,a
+2,b
+3,c
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+1,A
+2,B
+2,Bb
+4,D
+-------------------------------------------
+Time: 1724404360000 ms
+-------------------------------------------
+(2,(Some(b),Some(B)))
+(2,(Some(b),Some(Bb)))
+(3,(Some(c),None))
+(4,(None,Some(D)))
+(1,(Some(a),Some(A)))
+```
 
 ### 窗口函数
 #### window
@@ -797,8 +1058,92 @@ Time: 1724395985000 ms  // 第二个滑动窗口中的数据
 
 ```
 #### groupByKeyAndWindow
+对 DStream 每个滑动窗口中的 RDD 按 Key 做聚合操作，相当于先对 DStream 开窗 [window](#window)，再对每个滑动窗口进行 [groupByKey](#groupByKey) 操作  
+***只能作用于 K-V Pair 型 DStream***
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .map(line => line.split(",")(0) -> line.split(",")(1))
+  .groupByKeyAndWindow(windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+  .print()
+//socketTextDStream
+//  .map(line => line.split(",")(0) -> line.split(",")(1))
+//  .window(windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+//  .reduceByKey(_ + _)
+//  .print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据，其中 `a,a1` 和 `a,a2` 发完等待5秒再发 `b,b1` 确保他们被两个批次处理
+``` 
+$ nc -lk 9999
+a,a1
+a,a2
+b,b1
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的当前微批的数据，以及滑动窗口中的聚合数据
+``` 
+-------------------------------------------
+Time: 1724405275000 ms
+-------------------------------------------
+a,a1
+a,a2
+-------------------------------------------
+Time: 1724405275000 ms
+-------------------------------------------
+(a,ArrayBuffer(a1, a2))
+-------------------------------------------
+Time: 1724405280000 ms
+-------------------------------------------
+b,b1
+-------------------------------------------
+Time: 1724405280000 ms
+-------------------------------------------
+(a,ArrayBuffer(a1, a2))
+(b,ArrayBuffer(b1))
+```
 #### reduceByKeyAndWindow
-
+对 DStream 每个滑动窗口中的 RDD 按 Key 做聚合操作，相当于先对 DStream 开窗 [window](#window)，再对每个滑动窗口进行 [reduceByKey](#reduceByKey) 操作
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .map(line => line.split(",")(0) -> line.split(",")(1))
+  .reduceByKeyAndWindow(_ + _, windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+  .print()
+//socketTextDStream
+//  .map(line => line.split(",")(0) -> line.split(",")(1))
+//  .window(windowDuration = Durations.seconds(10), slideDuration = Durations.seconds(5))
+//  .reduceByKey(_ + _)
+//  .print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据，其中 `a,a1` 和 `a,a2` 发完等待5秒再发 `b,b1` 确保他们被两个批次处理
+``` 
+$ nc -lk 9999
+a,a1
+a,a2
+b,b1
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的当前微批的数据，以及滑动窗口中的聚合数据
+``` 
+-------------------------------------------
+Time: 1724405005000 ms
+-------------------------------------------
+a,a1
+a,a2
+-------------------------------------------
+Time: 1724405005000 ms
+-------------------------------------------
+(a,a1a2)
+-------------------------------------------
+Time: 1724405010000 ms
+-------------------------------------------
+b,b1
+-------------------------------------------
+Time: 1724405010000 ms
+-------------------------------------------
+(a,a1a2)
+(b,b1)
+```
 
 #### slice
 
@@ -814,6 +1159,7 @@ Time: 1724395985000 ms  // 第二个滑动窗口中的数据
 将 DStream 每个批次中的 RDD 以 TEXT 文件格式写入 Hadoop 支持的外部文件系统
 #### saveAsObjectFiles
 将 DStream 每个批次中的 RDD 序列化之后，以 Hadoop SequenceFile 文件格式写入 Hadoop 支持的外部文件系统
+
 ## 状态算子
 ### mapWithState 
 ### updateStateByKey 
