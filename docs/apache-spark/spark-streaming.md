@@ -462,7 +462,7 @@ Time: 1724329505000 ms
 ```scala
 val socketTextDStream = ssc.socketTextStream("localhost", 9999)
 socketTextDStream.print()
-socketTextDStream.count().print()
+socketTextDStream.countByValue().print()
 ```
 启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
 ``` 
@@ -488,9 +488,119 @@ Time: 1724329590000 ms
 (bb,1)
 
 ```
-#### groupByKey 
+#### groupByKey
+对 K-V Pair 型 DStream 每个批次中的 RDD 按 key 进行分组, 具有相同 key 的记录会被 group 到一起  
+***只能作用于 K-V Pair 型 DStream***
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .map(line => line.split(",")(0) -> line.split(",")(1))
+  .groupByKey()
+  .print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+a,a1
+a,a2
+b,b1
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及汇总后的数据
+
+``` 
+-------------------------------------------
+Time: 1724401770000 ms
+-------------------------------------------
+a,a1
+a,a2
+b,b1
+-------------------------------------------
+Time: 1724401770000 ms
+-------------------------------------------
+(a,ArrayBuffer(a1, a2))
+(b,ArrayBuffer(b1))
+```
 #### reduceByKey
+对 K-V Pair 型 DStream 每个批次中的 RDD 按 key 进行 reduce 操作, 具有相同 key 的记录将按照用户指定的 (left, right) => result 函数从左到右进行合并
+***只能作用于 K-V Pair 型 DStream***
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .map(line => line.split(",")(0) -> line.split(",")(1))
+  .groupByKey()
+  .print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+a,a1
+a,a2
+b,b1
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及汇总后的数据
+
+``` 
+-------------------------------------------
+Time: 1724401885000 ms
+-------------------------------------------
+a,a1
+a,a2
+b,b1
+-------------------------------------------
+Time: 1724401885000 ms
+-------------------------------------------
+(a,a1a2)
+(b,b1)
+
+```
 #### combineByKey
+对 DStream 每个批次中的 RDD 进行合并操作，与 [rdd-combineByKey](spark-rdd.md#combinebykey) 行为一致，操作分两个阶段，先对单个分区内的数据聚合，再对所有分区聚合结果进行聚合，从而得到最终的聚合结果  
+它允许返回一个与 DStream 记录类型 V 不同的类型 U, 比如将元素(Int) group 成一个 List   
+同样需要两个聚合函数，以及一个用来创建初始值的函数, 这个函数的入参将是每个分区的第一个元素  
+- createCombiner: V => U, 用于创建每个分区的初始值  
+- mergeValue: (U, V) => U, 作用在每个分区内数据的聚合函数  
+- mergeCombiners: (U, U) => U, 作用在每个分区聚合结果上的聚合函数  
+- partitioner, 用来对数据进行重分区的 partitioner, 一般无特殊要求，给 HashPartitioner 即可
+***只能作用于 K-V Pair 型 DStream***
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream
+  .map(line => line.split(",")(0) -> line.split(",")(1))
+  .combineByKey[List[String]](
+    createCombiner = (s: String) => List[String](s),
+    mergeValue = (l: List[String], s: String) => l :+ s,
+    mergeCombiner = (l1: List[String], l2: List[String]) => l1 ++ l2,
+    partitioner = new HashPartitioner(ssc.sparkContext.defaultMinPartitions))
+  .print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+``` 
+$ nc -lk 9999
+a,a1
+a,a2
+b,b1
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及汇总后的数据
+
+``` 
+-------------------------------------------
+Time: 1724402650000 ms
+-------------------------------------------
+a,a1
+a,a2
+b,b1
+-------------------------------------------
+Time: 1724402650000 ms
+-------------------------------------------
+(b,List(b1))
+(a,List(a1, a2))
+```
 
 ### 集合操作
 #### union
