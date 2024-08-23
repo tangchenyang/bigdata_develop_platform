@@ -1146,6 +1146,120 @@ Time: 1724405010000 ms
 ```
 
 #### slice
+### 状态算子
+
+#### updateStateByKey
+维护 DStream 的 Key 的全局状态，根据指定的 (values: scala.collection.Seq[U], state: Option[V]) => Option(V) 函数 进行状态更新  
+每个批次中相同 Key 的 value 将被 group 成 values，当前 Key 的状态为 state  
+***只能作用于 K-V Pair 型 DStream***
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+val tatalCountByKey: (Seq[Int], Option[Int]) => Option[Int] = (values: Seq[Int], state: Option[Int]) => {
+  Some(values.sum + state.getOrElse(0))
+}
+socketTextDStream.print()
+socketTextDStream
+  .flatMap(_.split(" ")).map((_, 1))
+  .updateStateByKey(tatalCountByKey)
+  .print()
+
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据，其中 `a` 和 `b` 发完等待5秒再发 `a a` 和 `b b` 确保他们被两个批次处理
+
+``` 
+$ nc -lk 9999
+a
+b 
+a a
+b b 
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及更新后的状态数据
+
+``` 
+-------------------------------------------
+Time: 1724409375000 ms
+-------------------------------------------
+a
+b 
+-------------------------------------------
+Time: 1724409375000 ms
+-------------------------------------------
+(a,1)
+(b,1)
+-------------------------------------------
+Time: 1724409380000 ms
+-------------------------------------------
+a a
+b b 
+-------------------------------------------
+Time: 1724409380000 ms
+-------------------------------------------
+(a,3)
+(b,3)
+```
+#### mapWithState
+维护 DStream 的 Key 的全局状态，根据指定的  (Time, String, Option[U], State[U]) => Some[V] 函数 进行状态更新  
+todo add more for `update` `get` etc.  
+每个批次中每个 Key 的每条记录都将作为 value 传入函数进行计算  
+***只能作用于 K-V Pair 型 DStream***
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+
+val totalCountByKey: (Time, String, Option[Int], State[Int]) => Some[(String, Int)] = (time: Time, key: String, value: Option[Int], state: State[Int]) => {
+  if (!state.exists())
+    state.update(0)
+  else {
+    state.update(state.get() + value.getOrElse(0))
+  }
+  Some({key -> state.get()})
+}
+
+socketTextDStream.print()
+socketTextDStream
+  .flatMap(_.split(" ")).map((_, 1))
+  .mapWithState(StateSpec.function(totalCountByKey))
+  .print()
+
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据，其中 `a` 和 `b` 发完等待5秒再发 `a a` 和 `b b` 确保他们被两个批次处理
+
+``` 
+$ nc -lk 9999
+a
+b 
+a a
+b b 
+```
+Spark Streaming 任务的控制台将打印出从 socket 接收到的数据，以及更新后的状态数据
+
+``` 
+-------------------------------------------
+Time: 1724410525000 ms
+-------------------------------------------
+a
+b 
+
+-------------------------------------------
+Time: 1724410525000 ms
+-------------------------------------------
+(a,1)
+(b,1)
+-------------------------------------------
+Time: 1724410530000 ms
+-------------------------------------------
+a a
+b b 
+-------------------------------------------
+Time: 1724410530000 ms
+-------------------------------------------
+(a,2)
+(a,3)
+(b,2)
+(b,3)
+
+```
 
 ## Action 算子
 ### 转换为 Java 集合
@@ -1202,9 +1316,6 @@ cc
 #### saveAsObjectFiles
 将 DStream 每个批次中的 RDD 序列化之后，以 Hadoop SequenceFile 文件格式写入 Hadoop 支持的外部文件系统
 
-## 状态算子
-### mapWithState 
-### updateStateByKey 
 
 ## 控制算子 
 ### persist
