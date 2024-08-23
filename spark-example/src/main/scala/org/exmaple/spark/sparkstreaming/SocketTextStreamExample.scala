@@ -10,10 +10,10 @@ object SocketTextStreamExample {
     val ssc = new StreamingContext(sparkConf, Seconds(5))
 
     // create socket text stream
-    val lines = ssc.socketTextStream("localhost", 9999)
+    val socketTextDStream = ssc.socketTextStream("localhost", 9999)
 
     // print in console
-    lines.print()
+    socketTextDStream.print()
 
     // start streaming job
     ssc.start()
