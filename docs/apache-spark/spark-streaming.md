@@ -1150,9 +1150,51 @@ Time: 1724405010000 ms
 ## Action 算子
 ### 转换为 Java 集合
 #### foreachRDD
-对 DStream 每个批次中的 RDD 做遍历操作，等效于 RDD 的 [foreach](spark-rdd.md#foreach)
+对 DStream 每个批次中的 RDD 做遍历操作，可以将 RDD 输出到控制台或写入外部系统等操作，返回 Unit 类型即无返回值  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.foreachRDD(rdd => rdd.foreach(println(_)))
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+```
+$ nc -lk 9999
+aa
+bb
+cc
+
+``` 
+Spark Streaming 任务的控制台将打印出每个批次中的 RDD 的每一条记录
+``` 
+-------------------------------------------
+Time: 1724415010000 ms
+-------------------------------------------
+(a,a1a2)
+(b,b1)
+
+```
 #### print
-将 DStream 每个批次中的 RDD 的前 10 条记录输出到控制台
+将 DStream 每个批次中的 RDD 的前 10 条记录输出到控制台  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+```
+$ nc -lk 9999
+aa
+bb
+cc
+
+``` 
+Spark Streaming 任务的控制台将打印出每个批次中的 RDD 的每一条记录
+``` 
+-------------------------------------------
+Time: 1724415010000 ms
+-------------------------------------------
+aa
+bb
+cc
+```
 
 ### 输出到外部系统
 #### saveAsTextFiles
