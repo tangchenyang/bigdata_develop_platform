@@ -1201,8 +1201,7 @@ Time: 1724409380000 ms
 ```
 #### mapWithState
 维护 DStream 的 Key 的全局状态，根据指定的  (Time, String, Option[U], State[U]) => Some[V] 函数 进行状态更新  
-todo add more for `update` `get` etc.  
-每个批次中每个 Key 的每条记录都将作为 value 传入函数进行计算  
+每个批次中每个 Key 的每条记录，以及每个 Key 的当前状态都将作为参数传入函数进行计算，可根据 State 的 `exists`, `get`, `update` 等方法来维护状态  
 ***只能作用于 K-V Pair 型 DStream***
 ```scala
 val socketTextDStream = ssc.socketTextStream("localhost", 9999)
