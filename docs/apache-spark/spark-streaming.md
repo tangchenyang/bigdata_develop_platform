@@ -155,7 +155,7 @@ $ echo "a" > /tmp/spark/logs/a.txt
 $ echo "bbb" > /tmp/spark/logs/b.txt
 $ echo "ccc" > /tmp/spark/logs/c.txt
 ```
-Spark Streaming 任务的控制台将打印出从 socket 接收到的数据
+Spark Streaming 任务的控制台将打印出从该路径识别到的新文件中的数据  
 ``` 
 -------------------------------------------
 Time: 1724327465000 ms
