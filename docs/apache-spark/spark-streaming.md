@@ -1311,7 +1311,36 @@ cc
 
 ### 输出到外部系统
 #### saveAsTextFiles
-将 DStream 每个批次中的 RDD 以 TEXT 文件格式写入 Hadoop 支持的外部文件系统
+将 DStream 每个批次中的 RDD 以 TEXT 文件格式写入 Hadoop 支持的外部文件系统  
+每个批次都会写一个新的文件目录以及相应的数据文件，因此长时间运行的流任务将产生很多的小文件  
+```scala
+val socketTextDStream = ssc.socketTextStream("localhost", 9999)
+socketTextDStream.print()
+socketTextDStream.saveAsTextFiles("/tmp/spark/output/socket_data")
+```
+启动程序后，使用 netcat 命令往本机的 9999 端口发送一些数据
+```
+$ nc -lk 9999
+aa
+bb
+cc
+``` 
+Spark Streaming 任务的控制台将打印出每个批次中的 RDD 的每一条记录
+``` 
+-------------------------------------------
+Time: 1724653405000 ms
+-------------------------------------------
+aa
+bb
+c
+```
+并且会将每个批次中的数据写入指定的路径中  
+```
+$ cat /tmp/spark/output/socket_data-1724653405000/*
+aa
+bb
+c
+```
 #### saveAsObjectFiles
 将 DStream 每个批次中的 RDD 序列化之后，以 Hadoop SequenceFile 文件格式写入 Hadoop 支持的外部文件系统
 
