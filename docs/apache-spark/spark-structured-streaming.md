@@ -56,7 +56,9 @@ Batch: 1
 +-----+
 ```
 ### 用于测试的 Rate Source 
-Structured Streaming 提供了一个 `Rate Source` 用于按照 `rowsPerSecond` 的速率生成测试场景下的输入数据   
+Structured Streaming 提供了两个 `Rate Source` 用于按照指定的的速率生成测试场景下的输入数据  
+- `Rate Source`: format `rate`，按 `rowsPerSecond` 的速率，每秒生成指定数量的记录   
+- `Rate Per Micro-Batch Source `: format `rate-micro-batch`，按 `rowsPerBatch` 的速率，每个批次生成指定数量的记录  
 ```scala 
 // create rate streaming DataFrame
 val rateStreamingDataFrame: DataFrame = spark.readStream
@@ -221,15 +223,63 @@ Batch: 1
 ```
 ## Transformation 算子
 ### 基本转换
-### 聚合操作
-### 分区转换
-### 集合运算
-### 窗口函数
-### 水印
-### 
+由于 Structured Streaming 使用与批处理语义一致的 DataFrame API，因此可以使用一切基于 DataFrame 的基本操作(如 select, where 等)，
+详细内容请参考 [spark-dataframe](spark-dataframe.md#transformation-算子)  
+### 窗口操作
+Structured Streaming 有三种窗口类型：`翻滚窗口`、`滑动窗口` 和 `会话窗口`.  
+![image](https://github.com/tangchenyang/picx-images-hosting/raw/master/20240827/image.8vmumr97ds.webp)  
+#### 翻滚窗口
+翻滚窗口(Tumbling Window) 是一系列不重叠但连续的、具有固定时间宽度的数据窗口。为了帮助理解，可以想象一下有一个正方形的卡片重复着翻滚动作，每次翻滚所产生的阴影面积即为一个一个的翻滚窗口  
 
-## Action 算子 
+
+
+#### 滑动窗口
+滑动窗口(Sliding Window)
+
+#### 会话窗口
+会话窗口(Session Window)
+
+#### 水印
+
+
+
+## Sink 算子 
+### 输出到控制台
+将流式 DataFrame 按批次输出到控制台  
+```scala
+// create rate streaming DataFrame
+val rateStreamingDataFrame: DataFrame = spark.readStream
+  .format("rate")
+  .option("rowsPerSecond", "3")
+  .load()
+
+println(f"isStreaming = ${rateStreamingDataFrame.isStreaming}")
+
+// print in console
+rateStreamingDataFrame.writeStream
+  .format("console")
+  .option("truncate", "false")
+  .trigger(Trigger.ProcessingTime("5 seconds"))
+  .start()
+  .awaitTermination()
+```
+程序启动后，控制台将打印出每个批次中的数据
+``` 
+isStreaming = true
+
+-------------------------------------------
+Batch: 1
+-------------------------------------------
++--------------------+-----+
+|           timestamp|value|
++--------------------+-----+
+|2024-10-10 10:10:...|    0|
+|2024-10-10 10:10:...|   10|
+|2024-10-10 10:10:...|   20|
++--------------------+-----+
+``` 
 ### 写入外部文件系统
+### 转换为 Java 集合
 ### 
 
 ## 控制算子

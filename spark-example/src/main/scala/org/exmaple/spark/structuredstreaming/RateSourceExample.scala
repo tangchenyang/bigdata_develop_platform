@@ -1,5 +1,6 @@
 package org.exmaple.spark.structuredstreaming
 
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -21,6 +22,7 @@ object RateSourceExample {
     // print in console
     rateStreamingDataFrame.writeStream
       .format("console")
+      .option("truncate", "false")
       .trigger(Trigger.ProcessingTime("5 seconds"))
       .start()
       .awaitTermination()

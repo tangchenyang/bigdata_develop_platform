@@ -28,6 +28,7 @@ object TableSourceExample {
     // print in console
     streamingDataFrame.writeStream
       .format("console")
+      .option("truncate", "false")
       .trigger(Trigger.ProcessingTime("2 seconds"))
       .start()
       .awaitTermination()

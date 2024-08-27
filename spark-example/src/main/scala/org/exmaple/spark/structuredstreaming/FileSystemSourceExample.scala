@@ -20,6 +20,7 @@ object FileSystemSourceExample {
     // print in console
     textFilesStreamingDataFrame.writeStream
       .format("console")
+      .option("truncate", "false")
       .trigger(Trigger.ProcessingTime("5 seconds"))
       .start()
       .awaitTermination()

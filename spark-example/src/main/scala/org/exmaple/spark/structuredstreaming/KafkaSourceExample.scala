@@ -23,6 +23,7 @@ object KafkaSourceExample {
     kafkaStreamingDataFrame.withColumn("value", kafkaStreamingDataFrame("value").cast("string"))
       .writeStream
       .format("console")
+      .option("truncate", "false")
       .trigger(Trigger.ProcessingTime("5 seconds"))
       .start()
       .awaitTermination()
