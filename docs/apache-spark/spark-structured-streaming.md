@@ -1,6 +1,6 @@
 # Spark Structured Streaming 
 ## 简介
-Spark Structured Streaming 是基于 Spark SQL 构建的 Spark 第二代流处理引擎，它向提供了与批处理语义一致的 DataFrame API，因此可以在代码层面将批处理和流处理进行统一。  
+Spark Structured Streaming 是基于 Spark SQL 构建的 Spark 第二代流处理引擎，它向提供了与批处理语义一致的 DataFrame API，因此可以在代码层面将批处理和流处理进行统一。 它的核心思想是，将数据流转换为无界的表，数据流中的每一条新纪录，都表示为无界表中的一条追加的行。  
 Spark Structured Streaming 在默认情况下仍然使用微批(离散流)处理，来实现最低 100 毫秒的计算间隔，并通过 checkpoint 和预写日志 WAL (Write-Ahead Logs) 来实现端到端的精确一次处理（exactly-once）语义；
 在 Spark 2.3 以引入了低延迟（连续流）处理模式，来满足最低 1 毫秒的端到端延迟，并实现端到端的至少一次处理(at-least once) 语义。  
 
