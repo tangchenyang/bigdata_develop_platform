@@ -132,7 +132,46 @@ Batch: 1
 +-----+
 ```
 
-### 读取 Hive 表
+### 读取流式表
+从流式表中将数据读取为流式 DataFrame   
+本例子中先通过 [Rate Source](#用于测试的-rate-source-) 创建数据流并将其创建为表，再从此流式表中读取数据，打印到控制台中   
+```scala
+// create rate streaming DataFrame
+val rateStreamingDataFrame: DataFrame = spark.readStream
+  .format("rate")
+  .option("rowsPerSecond", "3")
+  .load()
+// write the rate streaming DataFrame to table
+rateStreamingDataFrame.writeStream
+  .option("checkpointLocation", "checkpoints/test")
+  .outputMode("append")
+  .toTable("temp_streaming_table")
+
+// create streaming DataFrame from table
+val streamingDataFrame: DataFrame = spark.readStream
+  .table("temp_streaming_table")
+
+// print in console
+streamingDataFrame.writeStream
+  .format("console")
+  .trigger(Trigger.ProcessingTime("2 seconds"))
+  .start()
+  .awaitTermination()
+```
+程序运行后，控制台将打印出从表中读取到的数据   
+``` 
+-------------------------------------------
+Batch: 1
+-------------------------------------------
++--------------------+-----+
+|           timestamp|value|
++--------------------+-----+
+|2024-08-27 10:48:...|    9|
+|2024-08-27 10:48:...|    3|
+|2024-08-27 10:48:...|    2|
++--------------------+-----+
+``` 
+
 ### 读取消息系统
 
 ## Transformation 算子
