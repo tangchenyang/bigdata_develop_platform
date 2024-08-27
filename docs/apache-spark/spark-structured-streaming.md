@@ -173,7 +173,52 @@ Batch: 1
 ``` 
 
 ### 读取消息系统
+从消息系统（如 Kafka）中将数据读取为流式 DataFrame  
+#### Kafka 
+根据指定的 Kafka Topic 创建一个持续消费 Kafka Message 的流式 DataFrame  
+Spark Structured Streaming 与 Kafka 集成需要引入 `org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1` 依赖  
+Example: [sparkstream/KafkaStreamExample](/spark-example/src/main/scala/org/exmaple/spark/structuredstreaming/)  
 
+```scala
+// create kafka streaming DataFrame
+val kafkaStreamingDataFrame: DataFrame = spark.readStream
+  .format("kafka")
+  .option("kafka.bootstrap.servers", "localhost:9092")
+  .option("subscribe", "test-topic")
+  .load()
+
+println(f"isStreaming = ${kafkaStreamingDataFrame.isStreaming}")
+
+// print in console
+kafkaStreamingDataFrame.withColumn("value", kafkaStreamingDataFrame("value").cast("string"))
+  .writeStream
+  .format("console")
+  .trigger(Trigger.ProcessingTime("5 seconds"))
+  .start()
+  .awaitTermination()
+```
+启动程序后，使用 kafka-producer 命令往本地的 kafka 发送一些消息
+``` 
+$ kafka-console-producer.sh --broker-list localhost:9092 --topic test-topic
+>a
+>bb
+>ccc
+```
+Streaming 任务的控制台将打印出从 Kafka Topic 接收到的数据  
+``` 
+isStreaming = true
+
+-------------------------------------------
+Batch: 1
+-------------------------------------------
++----+-----+----------+---------+------+--------------------+-------------+
+| key|value|     topic|partition|offset|           timestamp|timestampType|
++----+-----+----------+---------+------+--------------------+-------------+
+|NULL|    a|test-topic|        0|    36|2024-08-27 12:12:...|            0|
+|NULL|   bb|test-topic|        0|    37|2024-08-27 12:12:...|            0|
+|NULL|  ccc|test-topic|        0|    38|2024-08-27 12:12:...|            0|
++----+-----+----------+---------+------+--------------------+-------------+
+```
 ## Transformation 算子
 ### 基本转换
 ### 聚合操作
