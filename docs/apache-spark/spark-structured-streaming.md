@@ -225,8 +225,9 @@ Batch: 1
 ### 基本转换
 由于 Structured Streaming 使用与批处理语义一致的 DataFrame API，因此可以使用一切基于 DataFrame 的基本操作(如 select, where 等)，
 详细内容请参考 [spark-dataframe](spark-dataframe.md#transformation-算子)  
+
 ### 窗口操作
-Structured Streaming 有三种窗口类型：`翻滚窗口`、`滑动窗口` 和 `会话窗口`.  
+Structured Streaming 有三种基于时间时间的窗口类型：`翻滚窗口`、`滑动窗口` 和 `会话窗口`.  
 ![image](https://github.com/tangchenyang/picx-images-hosting/raw/master/20240827/image.8vmumr97ds.webp)  
 #### 翻滚窗口
 翻滚窗口(Tumbling Window) 是一系列不重叠但连续的、具有固定时间宽度的数据窗口。为了帮助理解，可以想象一下有一个正方形的卡片重复着翻滚动作，每次翻滚所产生的阴影面积即为一个一个的翻滚窗口  
@@ -361,8 +362,8 @@ Batch: 2
 +------------------------------------------+-----+-----------------------+
 ```
 #### 会话窗口
-会话窗口(Session Window)具有和其他两种窗口不同的行为，它是以一次完整的会话为单位的，接收到数据时即为会话开始，当收到数据后超过给定时间没有新的数据到来，即认为本次会话结束，因此其窗口长度是不固定的，当会话一直结束不了时，不会产生新的会话窗口      
-会话窗口必须指定某一列进行统计，不能进行全局统计   
+会话窗口(Session Window)具有和其他两种窗口不同的行为，它是以一次完整的会话为单位的，接收到数据时即为会话开始，当收到数据后超过给定时间没有新的数据到来，即认为本次会话结束，因此其窗口长度是不固定的     
+会话窗口必须指定某几列作为 Key 进行统计，不能进行全局统计，当某个 Key 的会话一直结束不了时，不会产生该 Key 的新的会话窗口  
 ```scala
 val startTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now)
 println(f"Job start at ${startTime}")
