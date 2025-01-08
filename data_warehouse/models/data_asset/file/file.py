@@ -1,5 +1,6 @@
-from data_warehouse.data_asset.data_asset import DataAsset
+from data_warehouse.models.data_asset.base_data_asset import DataAsset
 
 
 class File(DataAsset):
-    pass
+    def __init__(self, name):
+        super().__init__(name)

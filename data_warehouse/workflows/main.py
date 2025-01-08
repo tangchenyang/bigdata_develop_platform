@@ -1,18 +1,20 @@
-from data_warehouse.models.job.base import Job
-from data_warehouse.workflows import jobs
+import logging
+
+from data_warehouse.workflows import registration
+from data_warehouse.runner.job_runner import run_job
 
 
-def init_jobs():
-    jobs_classes = Job.__subclasses__()
-    jobs_instances = [jobs_class() for jobs_class in jobs_classes]
-    return jobs_instances
-
-def run_job():
-    jobs_instances = init_jobs()
-    for job in jobs_instances:
-        job.execute()
+def init_logging():
+    logging.basicConfig(
+        format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+        level=logging.INFO,
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+    )
 
 
 if __name__ == '__main__':
-    run_job()
-    # print(Job.__subclasses__())
+    init_logging()
+    registration.register_all()
+    job_name = "dwd_moutai"
+
+    run_job(job_name)
