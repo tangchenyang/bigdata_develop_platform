@@ -1,10 +1,8 @@
 import logging
 from typing import List
 
-from data_stack.governance.quality import quality_checker
 from data_stack.governance.quality.quality_checker import QualityChecker
 from data_stack.models.data_asset.base_data_asset import DataAsset
-from data_stack.models.data_asset.table.table import Table
 
 
 class Job:
@@ -15,6 +13,13 @@ class Job:
     def __init__(self):
         if self.name is None:
             self.name = self.__class__.__name__ # todo to snake
+
+    def __str__(self):
+        return f"[Job: {self.name}]"
+
+    def __repr__(self):
+        return f"[Job: {self.name}]"
+
 
     def process(self):
         pass
@@ -37,5 +42,12 @@ class Job:
 
     def after_run(self):
         logging.info(f"Do something before after running the job")
+        from data_stack.governance.lineage import data_lineage, job_lineage
 
         QualityChecker.check(self.output)
+        data_lineage.register_data_asset_lineage(self.output, self.inputs)
+
+        from data_stack.meta import job_meta
+        upstream_jobs = [job_meta.get_job_by_output_data_asset(self.output) for data_asset in self.inputs]
+        job_lineage.register_job_lineage(self, upstream_jobs)
+

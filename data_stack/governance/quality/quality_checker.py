@@ -8,7 +8,9 @@ from data_stack.models.data_asset.table.table import Table
 
 
 class QualityChecker:
-    data_asset_qualities: Dict[str, QualityType] = {}
+
+    # todo save to table or some where
+    _data_asset_qualities: Dict[str, QualityType] = {}
 
     def __init__(self):
         pass
@@ -28,13 +30,15 @@ class QualityChecker:
     @staticmethod
     def store_qualities(data_asset_name: str, data_asset_quality: QualityType):
         """
-        todo save to table or some where
         :param data_asset_name:
         :param data_asset_quality:
         :return:
         """
-        QualityChecker.data_asset_qualities[data_asset_name] = data_asset_quality
+        QualityChecker._data_asset_qualities[data_asset_name] = data_asset_quality
 
+    @staticmethod
+    def get_all_qualities():
+        return QualityChecker._data_asset_qualities
 
 class TableQualityChecker(QualityChecker):
 
@@ -46,7 +50,7 @@ class TableQualityChecker(QualityChecker):
         :return:
         """
         table_quality = QualityType.BRONZE.value
-        QualityChecker.data_asset_qualities[table.name] = table_quality
+        QualityChecker._data_asset_qualities[table.name] = table_quality
         logging.info(f"Table {table.name}'s quality is {table_quality}")
         return None  # todo check more
 
@@ -58,6 +62,6 @@ class FileQualityChecker(QualityChecker):
         :return:
         """
         file_quality = QualityType.BRONZE.value
-        QualityChecker.data_asset_qualities[file.name] = file_quality
+        QualityChecker._data_asset_qualities[file.name] = file_quality
         logging.info(f"File {file.name}'s quality is {file_quality}")
         return None  # todo check more

@@ -8,6 +8,7 @@ class DwdMoutai(Job):
     name = "dwd_moutai"
 
     inputs = [
+        tables.ods_moutai,
         tables.ods_moutai
     ]
     output = tables.dwd_moutai

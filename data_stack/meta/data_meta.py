@@ -15,3 +15,9 @@ def register_data_asset(data_asset: DataAsset):
 def register_data_assets(data_assets: List[DataAsset]):
     for data_asset in data_assets:
         register_data_asset(data_asset)
+
+def get_data_asset_by_name(name: str):
+    if name not in registered_data_assets:
+        raise KeyError(f"Not found a data asset named {name}")
+
+    return registered_data_assets.get(name)

@@ -31,10 +31,6 @@ class Table(DataAsset):
         self.schema = schema
         self.engine = engine
 
-    def __str__(self):
-        return f"{self.name} ({self.database})"
-
-
 class OdsTable(Table):
     table_type = TableType.ODS
 
