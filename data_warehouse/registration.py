@@ -1,6 +1,6 @@
-from data_warehouse.meta import job_meta, data_meta
-from data_warehouse.models.data_asset.table.table import OdsTable, DwdTable
-from data_warehouse.workflows.jobs.dwd_moutai import DwdMoutai
+from data_stack.meta import job_meta, data_meta
+from data_stack.models.data_asset.table.table import OdsTable, DwdTable
+from data_warehouse.jobs.dwd_moutai import DwdMoutai
 
 jobs = [
     DwdMoutai(),

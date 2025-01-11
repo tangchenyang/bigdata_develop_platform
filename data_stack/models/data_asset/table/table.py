@@ -1,6 +1,6 @@
-from data_warehouse.models.data_asset.asset_type import AssetType
-from data_warehouse.models.data_asset.base_data_asset import DataAsset
-from data_warehouse.models.data_asset.table.table_type import TableType
+from data_stack.models.data_asset.asset_type import AssetType
+from data_stack.models.data_asset.base_data_asset import DataAsset
+from data_stack.models.data_asset.table.table_type import TableType
 
 
 class Table(DataAsset):

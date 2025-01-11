@@ -1,7 +1,8 @@
 import logging
 
-from data_warehouse.workflows import registration
-from data_warehouse.runner.job_runner import run_job
+from data_stack.governance.quality.quality_checker import QualityChecker
+from data_stack.runner.job_runner import run_job
+from data_warehouse import registration
 
 
 def init_logging():
@@ -18,3 +19,5 @@ if __name__ == '__main__':
     job_name = "dwd_moutai"
 
     run_job(job_name)
+
+    logging.info(f"{QualityChecker.data_asset_qualities}")

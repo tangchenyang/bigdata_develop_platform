@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List
 
-from data_warehouse.models.job.base_job import Job
+from data_stack.models.job.base_job import Job
 
 registered_jobs: Dict[str, Job] = {}
 

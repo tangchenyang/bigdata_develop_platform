@@ -1,4 +1,4 @@
-from data_warehouse.sugar import EnumSugar
+from data_stack.sugar import EnumSugar
 
 
 class AssetType(EnumSugar):

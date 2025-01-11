@@ -1,7 +1,7 @@
 from typing import Union
 
-from data_warehouse.models.job.base_job import Job
-from data_warehouse.meta.job_meta import registered_jobs
+from data_stack.models.job.base_job import Job
+from data_stack.meta.job_meta import registered_jobs
 
 
 def run_job(job: Union[Job, str]):

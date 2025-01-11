@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List
 
-from data_warehouse.models.data_asset.base_data_asset  import DataAsset
+from data_stack.models.data_asset.base_data_asset  import DataAsset
 
 registered_data_assets: Dict[str, DataAsset] = {}
 

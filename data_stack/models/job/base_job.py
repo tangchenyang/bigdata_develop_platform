@@ -1,11 +1,15 @@
 import logging
+from typing import List
 
-from data_warehouse.models.data_asset.base_data_asset import DataAsset
+from data_stack.governance.quality import quality_checker
+from data_stack.governance.quality.quality_checker import QualityChecker
+from data_stack.models.data_asset.base_data_asset import DataAsset
+from data_stack.models.data_asset.table.table import Table
 
 
 class Job:
     name = None
-    inputs = None
+    inputs: List[DataAsset] = None
     output: DataAsset = None
 
     def __init__(self):
@@ -19,13 +23,19 @@ class Job:
         logging.info(f"Running job {self.name}")
         logging.info(f"Inputs: {self.inputs}")
         logging.info(f"Output: {self.output}")
+
+        self.before_run()
         self.process()
+        self.after_run()
 
     def before_run(self):
         logging.info(f"Do something before running the job")
 
+        for data_asset in self.inputs:
+            QualityChecker.check(data_asset)
+
+
     def after_run(self):
         logging.info(f"Do something before after running the job")
-        if True:
-            logging.info(f"Checking data quality for {self.output.asset_type} {self.output.name}")
 
+        QualityChecker.check(self.output)

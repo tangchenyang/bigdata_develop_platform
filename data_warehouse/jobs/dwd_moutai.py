@@ -1,7 +1,7 @@
 import logging
 
-from data_warehouse.models.job.base_job import Job
-from data_warehouse.workflows.tables import tables
+from data_stack.models.job.base_job import Job
+from data_warehouse.tables import tables
 
 
 class DwdMoutai(Job):

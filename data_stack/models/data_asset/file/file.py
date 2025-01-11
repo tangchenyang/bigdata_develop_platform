@@ -1,4 +1,4 @@
-from data_warehouse.models.data_asset.base_data_asset import DataAsset
+from data_stack.models.data_asset.base_data_asset import DataAsset
 
 
 class File(DataAsset):
