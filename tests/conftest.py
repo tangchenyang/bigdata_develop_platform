@@ -1,6 +1,8 @@
 import os
 
 import pytest
+
+
 @pytest.fixture(scope="session")
 def tests_base_path():
     current_dir = os.path.dirname(os.path.abspath(__file__))
