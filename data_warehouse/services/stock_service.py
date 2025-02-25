@@ -1,7 +1,9 @@
 import logging
+from datetime import datetime
 
 import akshare
 import pandas as pd
+import pytz
 
 
 def get_stock_daily(stock_code: str, start_date: str = "19000101", end_date: str = "20990101") -> pd.DataFrame:
@@ -14,6 +16,8 @@ def get_stock_daily(stock_code: str, start_date: str = "19000101", end_date: str
     :return: pd.DataFrame
     """
     try:
+        logging.info(f"Fetching stock data for {stock_code} from {start_date} to {end_date} ")
+
         df = akshare.stock_zh_a_daily(
             symbol=stock_code,
             start_date=start_date,
@@ -25,7 +29,7 @@ def get_stock_daily(stock_code: str, start_date: str = "19000101", end_date: str
             logging.warning(f"Not found any data for stock {stock_code} in [{start_date}, {end_date}] ")
             return None
         df['stock_code'] = stock_code
-
+        df['timestamp'] = datetime.now(tz=pytz.UTC)
         return df
 
     except Exception as e:

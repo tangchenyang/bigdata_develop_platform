@@ -1,14 +1,16 @@
 from data_stack.meta import job_meta, data_meta
-from data_stack.models.data_asset.table.table import OdsTable, DwdTable
-from data_warehouse.jobs.dwd_moutai import DwdMoutai
+from data_warehouse.jobs.dwd_stock_daily import DwdStockDaily
+from data_warehouse.jobs.ods.ods_stock_daily import OdsStockDaily
+from data_warehouse.tables import tables
 
 jobs = [
-    DwdMoutai(),
+    OdsStockDaily(),
+    DwdStockDaily(),
 ]
 
 data_assets = [
-    OdsTable("ods_moutai"),
-    DwdTable("dwd_moutai"),
+    tables.ods_stock_daily,
+    tables.dwd_stock_daily,
 ]
 
 

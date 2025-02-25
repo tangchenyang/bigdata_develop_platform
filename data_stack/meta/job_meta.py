@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List
 
+from data_stack.governance.lineage import data_lineage
 from data_stack.models.data_asset.base_data_asset import DataAsset
 from data_stack.models.job.base_job import Job
 
@@ -13,6 +14,8 @@ def register_job(job: Job):
     registered_jobs[job.name] = job
 
     logging.info(f"Registered job {job.name}")
+
+    data_lineage.register_data_asset_lineage(job.output, job.inputs)
 
 
 def register_jobs(jobs: List[Job]):

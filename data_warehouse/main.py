@@ -1,11 +1,5 @@
 import logging
 
-from data_stack.governance.lineage import data_lineage
-from data_stack.governance.lineage import job_lineage
-from data_stack.governance.quality.quality_checker import QualityChecker
-from data_stack.runner.job_runner import run_job
-from data_warehouse import registration
-
 
 def init_logging():
     logging.basicConfig(
@@ -14,13 +8,18 @@ def init_logging():
         datefmt="%Y-%m-%dT%H:%M:%S%z",
     )
 
-
 if __name__ == '__main__':
     init_logging()
-    registration.register_all()
-    job_name = "dwd_moutai"
 
-    run_job(job_name)
+    from data_stack.governance.lineage import data_lineage
+    from data_stack.governance.lineage import job_lineage
+    from data_stack.governance.quality.quality_checker import QualityChecker
+    from data_stack.runner.job_runner import run_job
+    from data_warehouse import registration
+
+    registration.register_all()
+    run_job("ods_stock_daily")
+    run_job("dwd_stock_daily")
 
     # check governance result
     logging.info("=" * 30 + " governance result " + "=" * 30)
