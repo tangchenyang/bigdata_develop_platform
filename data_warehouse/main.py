@@ -18,6 +18,7 @@ if __name__ == '__main__':
     from data_warehouse import registration
 
     registration.register_all()
+    run_job("ods_stock_info_full_daily")
     run_job("ods_stock_daily")
     run_job("dwd_stock_daily")
 

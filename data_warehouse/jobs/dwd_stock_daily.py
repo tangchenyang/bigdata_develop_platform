@@ -20,7 +20,7 @@ class DwdStockDaily(Job):
         dwd_df = ods_df
 
         from data_stack.utils import dataframe_writer
-        dataframe_writer.write_to_table(dwd_df, self.output, partition_columns=["stock_code"])
+        dataframe_writer.write_to_table(dwd_df, self.output, partition_columns=["partition_date"])
 
         logging.info(f"Saved to {self.output}")
 
