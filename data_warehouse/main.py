@@ -1,15 +1,6 @@
 import logging
 
-
-def init_logging():
-    logging.basicConfig(
-        format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
-        level=logging.INFO,
-        datefmt="%Y-%m-%dT%H:%M:%S%z",
-    )
-
 if __name__ == '__main__':
-    init_logging()
 
     from data_stack.governance.lineage import data_lineage
     from data_stack.governance.lineage import job_lineage
@@ -18,8 +9,8 @@ if __name__ == '__main__':
     from data_warehouse import registration
 
     registration.register_all()
-    run_job("ods_stock_info_full_daily")
-    run_job("ods_stock_market_snapshot_daily")
+    # run_job("ods_stock_info_full_daily")
+    # run_job("ods_stock_market_snapshot_daily")
     run_job("dwd_stock_market_snapshot_daily")
 
     # check governance result
