@@ -4,13 +4,13 @@ from data_stack.models.job.base_job import Job
 from data_warehouse.tables import tables
 
 
-class DwdStockDaily(Job):
-    name = "dwd_stock_daily"
+class DwdStockMarketSnapshotDaily(Job):
+    name = "dwd_stock_market_snapshot_daily"
 
     inputs = [
-        tables.ods_stock_daily
+        tables.ods_stock_market_snapshot_daily
     ]
-    output = tables.dwd_stock_daily
+    output = tables.dwd_stock_marketa_snapshot_daily
 
     def process(self):
         logging.info(f"Reading from {self.inputs}")

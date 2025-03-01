@@ -19,8 +19,8 @@ if __name__ == '__main__':
 
     registration.register_all()
     run_job("ods_stock_info_full_daily")
-    run_job("ods_stock_daily")
-    run_job("dwd_stock_daily")
+    run_job("ods_stock_market_snapshot_daily")
+    run_job("dwd_stock_market_snapshot_daily")
 
     # check governance result
     logging.info("=" * 30 + " governance result " + "=" * 30)

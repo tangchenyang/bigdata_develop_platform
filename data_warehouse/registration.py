@@ -1,18 +1,18 @@
 from data_stack.meta import job_meta, data_meta
-from data_warehouse.jobs.dwd_stock_daily import DwdStockDaily
-from data_warehouse.jobs.ods.ods_stock_daily import OdsStockDaily
+from data_warehouse.jobs.dwd.dwd_stock_market_snapshot_daily import DwdStockMarketSnapshotDaily
+from data_warehouse.jobs.ods.ods_stock_market_snapshot_daily import OdsStockMarketSnapshotDaily
 from data_warehouse.jobs.ods.ods_stock_info_full_daily import OdsStockInfoFullDaily
 from data_warehouse.tables import tables
 
 jobs = [
-    OdsStockDaily(),
-    DwdStockDaily(),
+    OdsStockMarketSnapshotDaily(),
+    DwdStockMarketSnapshotDaily(),
     OdsStockInfoFullDaily()
 ]
 
 data_assets = [
-    tables.ods_stock_daily,
-    tables.dwd_stock_daily,
+    tables.ods_stock_market_snapshot_daily,
+    tables.dwd_stock_marketa_snapshot_daily,
     tables.ods_stock_info_full_daily,
 ]
 
