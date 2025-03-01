@@ -6,3 +6,4 @@ codes/target
 codes/base/target/*
 codes/example/target/*
 target
+/**/iceberg_warehouse/
