@@ -29,7 +29,7 @@ def get_stock_daily(stock_code: str, start_date: str = "19000101", end_date: str
             logging.warning(f"Not found any data for stock {stock_code} in [{start_date}, {end_date}] ")
             return None
         df['stock_code'] = stock_code
-        df['timestamp'] = datetime.now(tz=pytz.UTC)
+        df['ingest_time'] = datetime.now(tz=pytz.UTC)
         return df
 
     except Exception as e:
@@ -83,7 +83,7 @@ def get_all_stock_list():
     stock_bj = get_stock_list_bj()
 
     all_stock = pd.concat(objs=[stock_sh, stock_sz, stock_bj], ignore_index=True)
-    all_stock['timestamp'] = datetime.now(tz=pytz.UTC)
-    all_stock.columns = ["stock_exchange", "stock_code", "stock_name", "company_name", "industry", "listing_date", "timestamp"]
+    all_stock['ingest_time'] = datetime.now(tz=pytz.UTC)
+    all_stock.columns = ["stock_exchange", "stock_code", "stock_name", "company_name", "industry", "listing_date", "ingest_time"]
     return all_stock
 

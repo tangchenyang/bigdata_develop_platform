@@ -39,18 +39,18 @@ class Job:
     def before_run(self):
         logging.info(f"Do something before running the job")
 
-        for data_asset in self.inputs:
-            QualityChecker.check(data_asset)
+        # for data_asset in self.inputs:
+        #     QualityChecker(self.spark).check(data_asset)
 
 
     def after_run(self):
         logging.info(f"Do something before after running the job")
         from data_stack.governance.lineage import data_lineage, job_lineage
 
-        QualityChecker.check(self.output)
+        QualityChecker(self.spark).check(self.output)
         data_lineage.register_data_asset_lineage(self.output, self.inputs)
 
         from data_stack.meta import job_meta
-        upstream_jobs = [job_meta.get_job_by_output_data_asset(self.output) for data_asset in self.inputs]
+        upstream_jobs = [job_meta.get_job_by_output_data_asset(data_asset) for data_asset in self.inputs]
         job_lineage.register_job_lineage(self, upstream_jobs)
 

@@ -1,6 +1,9 @@
 import logging
 from typing import Dict
 
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import count_if, count, lit
+
 from data_stack.governance.quality.quality_type import QualityType
 from data_stack.models.data_asset.base_data_asset import DataAsset
 from data_stack.models.data_asset.file.file import File
@@ -12,15 +15,14 @@ class QualityChecker:
     # todo save to table or some where
     _data_asset_qualities: Dict[str, QualityType] = {}
 
-    def __init__(self):
-        pass
+    def __init__(self, spark: SparkSession):
+        self.spark = spark
 
-    @staticmethod
-    def check(data_asset: DataAsset):
+    def check(self, data_asset: DataAsset):
         if isinstance(data_asset, Table):
-            checker = TableQualityChecker
+            checker = TableQualityChecker(self.spark)
         elif isinstance(data_asset, File):
-            checker = FileQualityChecker
+            checker = FileQualityChecker(self.spark)
         else:
             raise Exception(f"Unsupported data set {data_asset}")
 
@@ -42,21 +44,33 @@ class QualityChecker:
 
 class TableQualityChecker(QualityChecker):
 
-    @staticmethod
-    def check(table: Table):
+    def check(self, table: Table):
         """
         todo check the quality of the table based on the inputs and the table itself
         :param table:
         :return:
         """
+        table_df = self.spark.table(table.full_name()) # todo consider incremental check
+        table_df.cache()
+        select_expr = [count(lit(1)).alias("total_rows")]
         table_quality = QualityType.BRONZE.value
+        for field in table.schema.fields:
+            for rule in field.rules:
+                if rule == "Not Null":
+                    select_expr.append(count_if(table_df[field.name].isNull()).alias(f"{field.name}_isnull_rows"))
+                elif rule == "Unique":
+                    # select_expr.append(count_if(table_df[field.name].isNull()).alias(f"{field.name}_isnull_count"))
+                    pass
+        table_df.select(*select_expr).show(1000, False)
+        table_df.unpersist()
+
+
         QualityChecker._data_asset_qualities[table.name] = table_quality
         logging.info(f"Table {table.name}'s quality is {table_quality}")
         return None  # todo check more
 
 class FileQualityChecker(QualityChecker):
-    @staticmethod
-    def check(file: File):
+    def check(self, file: File):
         """
         :param file:
         :return:

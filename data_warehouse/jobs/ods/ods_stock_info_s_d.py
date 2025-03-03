@@ -22,7 +22,7 @@ class OdsStockInfoSD(Job):
         stock_info_df = self.spark.createDataFrame(stock_info_pd_df)
 
         from data_stack.utils import dataframe_writer
-        stock_info_df = stock_info_df.withColumn("partition_date", expr("TO_DATE(timestamp)"))
+        stock_info_df = stock_info_df.withColumn("partition_date", expr("TO_DATE(ingest_time)"))
         dataframe_writer.write_to_table(stock_info_df, self.output, partition_columns=["partition_date"])
 
         logging.info(f"Saved to {self.output}")

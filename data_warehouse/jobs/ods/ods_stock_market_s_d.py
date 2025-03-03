@@ -20,7 +20,7 @@ class OdsStockMarketSD(Job):
             pd_df = stock_service.get_stock_daily(stock_code)
 
             spark_df = self.spark.createDataFrame(pd_df)
-            spark_df = spark_df.withColumn("partition_date", expr("TO_DATE(timestamp)"))
+            spark_df = spark_df.withColumn("partition_date", expr("TO_DATE(ingest_time)"))
 
             from data_stack.utils import dataframe_writer
             dataframe_writer.write_to_table(spark_df, self.output, partition_columns=["partition_date"])

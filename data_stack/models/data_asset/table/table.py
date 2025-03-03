@@ -5,6 +5,7 @@ from data_stack.models.data_asset.base_data_asset import DataAsset
 from data_stack.models.data_asset.table.table_type import TableType
 from data_stack.sugar import EnumSugar
 
+
 class TableEngine(EnumSugar):
     SPARK = "spark"
     ICEBERG = "iceberg"
@@ -20,6 +21,30 @@ class Database(EnumSugar):
     DIM = "dim"
     ADS = "ads"
 
+
+class FieldType(EnumSugar):
+    STRING = "string"
+
+
+class TableField:
+    def __init__(self, name: str, type: str, comment: str = None, rules: list[str] = None):
+        self.name = name
+        self.type = type
+        self.comment = comment
+        self.rules = rules
+
+
+class TableSchema:
+    def __init__(self, fields: list[TableField] = None, partition_fields: list[str] = None):
+        self.fields = fields
+        self.partition_fields = partition_fields
+
+    def columns(self):
+        """
+        Return a list of column names
+        """
+        return [field.name for field in self.fields]
+
 class Table(DataAsset):
     asset_type = AssetType.TABLE
 
@@ -27,7 +52,7 @@ class Table(DataAsset):
                  name: str,
                  database: Database = Database.DEFAULT,
                  catalog: Catalog = Catalog.SPARK_CATALOG,
-                 schema=None,
+                 schema: TableSchema = None,
                  engine: TableEngine = TableEngine.SPARK,
                  **kwargs,
                  ):
@@ -49,6 +74,10 @@ class Table(DataAsset):
         self.engine = engine
 
         self.validate_table_name()
+
+        assert self.name is not None, "Table name must be provided"
+        assert self.schema is not None, "Table schema must be provided"
+        assert self.engine is not None, "Table engine must be provided"
 
 
     def full_name(self):
