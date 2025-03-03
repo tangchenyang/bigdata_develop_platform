@@ -9,9 +9,9 @@ if __name__ == '__main__':
     from data_warehouse import registration
 
     registration.register_all()
-    # run_job("ods_stock_info_full_daily")
-    # run_job("ods_stock_market_snapshot_daily")
-    run_job("dwd_stock_market_snapshot_daily")
+    run_job("ods_stock_info_s_d")
+    run_job("ods_stock_market_s_d")
+    run_job("dwd_stock_market_s_d")
 
     # check governance result
     logging.info("=" * 30 + " governance result " + "=" * 30)

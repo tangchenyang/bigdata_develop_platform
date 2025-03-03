@@ -6,11 +6,14 @@ from data_stack.models.job.base_job import Job
 from data_warehouse.tables import tables
 
 
-class OdsStockInfoFullDaily(Job):
-    name = "ods_stock_info_full_daily"
+class OdsStockInfoSD(Job):
+    """
+    ODS Stock Info Snapshot Daily job
+    """
+    name = "ods_stock_info_s_d"
 
     inputs = []
-    output = tables.ods_stock_info_full_daily
+    output = tables.ods_stock_info_s_d
 
     def process(self):
         from data_warehouse.services import stock_service
