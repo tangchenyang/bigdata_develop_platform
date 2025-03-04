@@ -6,4 +6,6 @@ codes/target
 codes/base/target/*
 codes/example/target/*
 target
+/**/metastore_db/
 /**/iceberg_warehouse/
+/**/derby.log
