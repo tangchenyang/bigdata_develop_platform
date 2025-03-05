@@ -2,7 +2,7 @@ import logging
 from typing import Dict
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import count_if, count, lit
+from pyspark.sql.functions import count_if, count, lit, count_distinct
 
 from data_stack.governance.quality.quality_type import QualityType
 from data_stack.models.data_asset.base_data_asset import DataAsset
@@ -52,16 +52,30 @@ class TableQualityChecker(QualityChecker):
         """
         table_df = self.spark.table(table.full_name()) # todo consider incremental check
         table_df.cache()
-        select_expr = [count(lit(1)).alias("total_rows")]
+        select_expr = [
+            lit(table.catalog.value).alias("catalog"),
+            lit(table.database.value).alias("database"),
+            lit(table.name).alias("table"),
+            count(lit(1)).cast("string").alias("total_rows")
+        ]
         table_quality = QualityType.BRONZE.value
         for field in table.schema.fields:
             for rule in field.rules:
                 if rule == "Not Null":
-                    select_expr.append(count_if(table_df[field.name].isNull()).alias(f"{field.name}_isnull_rows"))
+                    select_expr.append(count_if(table_df[field.name].isNull()).cast("string").alias(f"{field.name}_isnull_rows"))
                 elif rule == "Unique":
-                    # select_expr.append(count_if(table_df[field.name].isNull()).alias(f"{field.name}_isnull_count"))
-                    pass
-        table_df.select(*select_expr).show(1000, False)
+                    select_expr.append(
+                        (count_distinct(table_df[field.name]).alias(f"{field.name}_isnull_count") == count(lit(1))).cast("string").alias(f"{field.name}_is_unique")
+                    )
+                else:
+                    raise Exception(f"Unsupported rule {rule}")
+
+        check_result_df = table_df.select(*select_expr)
+
+        id_columns = ["catalog", "database", "table"]
+        rest_columns = [c for c in check_result_df.columns if c not in id_columns]
+
+        check_result_df.unpivot(ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value").show()
         table_df.unpersist()
 
 
