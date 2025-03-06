@@ -47,7 +47,7 @@ class Job:
         logging.info(f"Do something before after running the job")
         from data_stack.governance.lineage import data_lineage, job_lineage
 
-        QualityChecker(self.spark).check(self.output)
+        QualityChecker(self.spark).check(self.output) # todo separate to a testing job from compute job to avoid compute job failure
         data_lineage.register_data_asset_lineage(self.output, self.inputs)
 
         from data_stack.meta import job_meta

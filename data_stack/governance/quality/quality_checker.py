@@ -1,8 +1,9 @@
 import logging
+from datetime import date
 from typing import Dict
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import count_if, count, lit, count_distinct
+from pyspark.sql.functions import count_if, count, lit, count_distinct, col, collect_set, max as f_max
 
 from data_stack.governance.quality.quality_type import QualityType
 from data_stack.models.data_asset.base_data_asset import DataAsset
@@ -51,13 +52,19 @@ class TableQualityChecker(QualityChecker):
         :return:
         """
         table_df = self.spark.table(table.full_name()) # todo consider incremental check
-        table_df.cache()
         select_expr = [
             lit(table.catalog.value).alias("catalog"),
             lit(table.database.value).alias("database"),
             lit(table.name).alias("table"),
             count(lit(1)).cast("string").alias("total_rows")
         ]
+        if table.schema.partition_fields and "partition_date" in table.schema.partition_fields:
+            current_date = date.today().strftime("%Y-%m-%d")  # todo consider pass from execution params
+            table_df = table_df.filter(col("partition_date") == current_date)
+            select_expr.append(f_max("partition_date").cast("string").alias("partition_date"))
+
+        table_df.cache()
+
         table_quality = QualityType.BRONZE.value
         for field in table.schema.fields:
             for rule in field.rules:
@@ -72,10 +79,11 @@ class TableQualityChecker(QualityChecker):
 
         check_result_df = table_df.select(*select_expr)
 
-        id_columns = ["catalog", "database", "table"]
+        id_columns = ["catalog", "database", "table", "partition_date"]
         rest_columns = [c for c in check_result_df.columns if c not in id_columns]
 
-        check_result_df.unpivot(ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value").show()
+        check_result_df.unpivot(ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value").show(100,
+                                                                                                                                            False)
         table_df.unpersist()
 
 
