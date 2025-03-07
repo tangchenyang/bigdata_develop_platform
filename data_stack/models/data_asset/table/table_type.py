@@ -7,3 +7,4 @@ class TableType(enum.Enum):
     DWD = "dwd"
     DWS = "dws"
     ADS = "ads"
+    sys = "sys"

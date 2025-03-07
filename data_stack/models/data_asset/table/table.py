@@ -20,6 +20,7 @@ class Database(EnumSugar):
     DWD = "dwd"
     DIM = "dim"
     ADS = "ads"
+    SYS = "sys"
 
 
 class FieldType(EnumSugar):
@@ -115,3 +116,6 @@ class DwsTable(Table):
 
 class AdsTable(Table):
     table_type = TableType.ADS
+
+class SysTable(Table):
+    table_type = TableType.sys

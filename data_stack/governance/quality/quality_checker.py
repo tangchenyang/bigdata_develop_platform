@@ -3,12 +3,12 @@ from datetime import date
 from typing import Dict
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import count_if, count, lit, count_distinct, col, collect_set, max as f_max
+from pyspark.sql.functions import count_if, count, lit, count_distinct, col, max as f_max
 
 from data_stack.governance.quality.quality_type import QualityType
 from data_stack.models.data_asset.base_data_asset import DataAsset
 from data_stack.models.data_asset.file.file import File
-from data_stack.models.data_asset.table.table import Table
+from data_stack.models.data_asset.table.table import Table, SysTable, Database, Catalog, TableSchema, TableField, TableEngine
 
 
 class QualityChecker:
@@ -44,6 +44,20 @@ class QualityChecker:
         return QualityChecker._data_asset_qualities
 
 class TableQualityChecker(QualityChecker):
+    data_stack_table_quality = SysTable(
+        name="data_stack_table_quality",
+        database=Database.SYS,
+        catalog=Catalog.ICEBERG_CATALOG,
+        schema=TableSchema([
+            TableField(name="catalog", type="STRING", comment=""),
+            TableField(name="database", type="STRING", comment=""),
+            TableField(name="table", type="STRING", comment=""),
+            TableField(name="partition_date", type="STRING", comment=""),
+            TableField(name="metric_name", type="STRING", comment=""),
+            TableField(name="metric_value", type="STRING", comment=""),
+        ]),
+        engine=TableEngine.ICEBERG
+    )
 
     def check(self, table: Table):
         """
@@ -82,8 +96,13 @@ class TableQualityChecker(QualityChecker):
         id_columns = ["catalog", "database", "table", "partition_date"]
         rest_columns = [c for c in check_result_df.columns if c not in id_columns]
 
-        check_result_df.unpivot(ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value").show(100,
-                                                                                                                                            False)
+        unpivot_result_df = check_result_df.unpivot(
+            ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value"
+        )
+        from data_stack.utils import dataframe_writer
+        dataframe_writer.write_to_table(unpivot_result_df, self.data_stack_table_quality, partition_columns=["partition_date", "table"])
+        # unpivot_result_dff.writeTo()
+        unpivot_result_df.show(100, False)
         table_df.unpersist()
 
 
