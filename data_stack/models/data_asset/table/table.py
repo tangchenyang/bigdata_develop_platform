@@ -2,7 +2,6 @@ import logging
 
 from data_stack.models.data_asset.asset_type import AssetType
 from data_stack.models.data_asset.base_data_asset import DataAsset
-from data_stack.models.data_asset.table.table_type import TableType
 from data_stack.sugar import EnumSugar
 
 
@@ -17,8 +16,9 @@ class Catalog(EnumSugar):
 class Database(EnumSugar):
     DEFAULT = "default"
     ODS = "ods"
-    DWD = "dwd"
     DIM = "dim"
+    DWD = "dwd"
+    DWS = "dws"
     ADS = "ads"
     SYS = "sys"
 
@@ -37,6 +37,8 @@ class TableField:
 
 class TableSchema:
     def __init__(self, fields: list[TableField] = None, partition_fields: list[str] = None):
+        if fields is None:
+            fields = []
         self.fields = fields
         self.partition_fields = partition_fields
 
@@ -45,6 +47,20 @@ class TableSchema:
         Return a list of column names
         """
         return [field.name for field in self.fields]
+
+    def add(self, field: TableField):
+        return TableSchema(self.fields + [field], self.partition_fields)
+
+
+class TableType(EnumSugar):
+    ODS = "ods"
+    DIM = "dim"
+    DWD = "dwd"
+    DWS = "dws"
+    ADS = "ads"
+    sys = "sys"
+
+
 
 class Table(DataAsset):
     asset_type = AssetType.TABLE

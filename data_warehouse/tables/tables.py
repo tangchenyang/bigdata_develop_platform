@@ -46,12 +46,7 @@ ods_stock_info_s_d = OdsTable(
 
     )
 )
-dwd_stock_market_s_d = DwdTable(
-    "dwd_stock_market_s_d",
-    database=Database.DWD,
-    catalog=Catalog.ICEBERG_CATALOG,
-    engine=TableEngine.ICEBERG,
-    schema=TableSchema(
+dwd_stock_market_s_d_schema_v1 = TableSchema(
         fields=[
             TableField("date", "DATE", "日期", ["Not Null"]),
             TableField("open", "DOUBLE", "开盘价", ["Not Null"]),
@@ -63,10 +58,20 @@ dwd_stock_market_s_d = DwdTable(
             TableField("outstanding_share", "DOUBLE", "流通股", ["Not Null"]),
             TableField("turnover", "DOUBLE", "换手率", ["Not Null"]),
             TableField("stock_code", "DOUBLE", "股票代码", ["Not Null"]),
-            TableField("ingest_time", "DOUBLE", "采集时间", ["Not Null"]),
         ],
         partition_fields=[
             "partition_date"
         ]
     )
+dwd_stock_market_s_d_schema_v2 = dwd_stock_market_s_d_schema_v1.add(
+    TableField("ingest_time", "DOUBLE", "采集时间", ["Not Null"]),
 )
+
+dwd_stock_market_s_d = DwdTable(
+    "dwd_stock_market_s_d",
+    database=Database.DWD,
+    catalog=Catalog.ICEBERG_CATALOG,
+    engine=TableEngine.ICEBERG,
+    schema=dwd_stock_market_s_d_schema_v2
+)
+# todo consider schema evolution

@@ -8,6 +8,7 @@ def init_logging():
         level=logging.INFO,
         datefmt="%Y-%m-%dT%H:%M:%S%z",
     )
+    logging.root.setLevel("INFO") # todo global logger
 
 
 init_logging()

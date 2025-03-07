@@ -16,7 +16,7 @@ def write_to_table(df, table: Table, partition_columns: list[str] =None):
 
 def write_to_iceberg_table(df: DataFrame, table: Table, partition_columns: list[str]=None):
     _spark = df.sparkSession
-
+    # todo validate schema between dataframe and schema in table
     table_full_name = table.full_name()
 
     writer = df.writeTo(table_full_name)

@@ -115,7 +115,6 @@ class TableQualityChecker(QualityChecker):
         )
         from data_stack.utils import dataframe_writer
         dataframe_writer.write_to_table(table_quality_detail, self.data_stack_table_quality_detail, partition_columns=["partition_date", "table"])
-        table_quality_detail.show(100, False)
 
         table_quality_summary = (
             table_quality_detail
@@ -135,7 +134,6 @@ class TableQualityChecker(QualityChecker):
         )
 
         dataframe_writer.write_to_table(table_quality_summary, self.data_stack_table_quality_summary, partition_columns=["partition_date", "table"])
-        table_quality_summary.show(100, False)
         table_df.unpersist()
 
         QualityChecker._data_asset_qualities[table.name] = table_quality
