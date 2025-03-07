@@ -3,7 +3,7 @@ from datetime import date
 from typing import Dict
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import count_if, count, lit, count_distinct, col, max as f_max
+from pyspark.sql.functions import count_if, count, lit, count_distinct, col, max as f_max, when
 
 from data_stack.governance.quality.quality_type import QualityType
 from data_stack.models.data_asset.base_data_asset import DataAsset
@@ -44,8 +44,8 @@ class QualityChecker:
         return QualityChecker._data_asset_qualities
 
 class TableQualityChecker(QualityChecker):
-    data_stack_table_quality = SysTable(
-        name="data_stack_table_quality",
+    data_stack_table_quality_detail = SysTable(
+        name="data_stack_table_quality_detail",
         database=Database.SYS,
         catalog=Catalog.ICEBERG_CATALOG,
         schema=TableSchema([
@@ -55,6 +55,20 @@ class TableQualityChecker(QualityChecker):
             TableField(name="partition_date", type="STRING", comment=""),
             TableField(name="metric_name", type="STRING", comment=""),
             TableField(name="metric_value", type="STRING", comment=""),
+        ]),
+        engine=TableEngine.ICEBERG
+    )
+
+    data_stack_table_quality_summary = SysTable(
+        name="data_stack_table_quality_summary",
+        database=Database.SYS,
+        catalog=Catalog.ICEBERG_CATALOG,
+        schema=TableSchema([
+            TableField(name="catalog", type="STRING", comment=""),
+            TableField(name="database", type="STRING", comment=""),
+            TableField(name="table", type="STRING", comment=""),
+            TableField(name="partition_date", type="STRING", comment=""),
+            TableField(name="quality_type", type="STRING", comment="")
         ]),
         engine=TableEngine.ICEBERG
     )
@@ -86,7 +100,7 @@ class TableQualityChecker(QualityChecker):
                     select_expr.append(count_if(table_df[field.name].isNull()).cast("string").alias(f"{field.name}_isnull_rows"))
                 elif rule == "Unique":
                     select_expr.append(
-                        (count_distinct(table_df[field.name]).alias(f"{field.name}_isnull_count") == count(lit(1))).cast("string").alias(f"{field.name}_is_unique")
+                        (count_distinct(table_df[field.name]) == count(lit(1))).cast("string").alias(f"{field.name}_is_unique")
                     )
                 else:
                     raise Exception(f"Unsupported rule {rule}")
@@ -96,15 +110,33 @@ class TableQualityChecker(QualityChecker):
         id_columns = ["catalog", "database", "table", "partition_date"]
         rest_columns = [c for c in check_result_df.columns if c not in id_columns]
 
-        unpivot_result_df = check_result_df.unpivot(
+        table_quality_detail = check_result_df.unpivot(
             ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value"
         )
         from data_stack.utils import dataframe_writer
-        dataframe_writer.write_to_table(unpivot_result_df, self.data_stack_table_quality, partition_columns=["partition_date", "table"])
-        # unpivot_result_dff.writeTo()
-        unpivot_result_df.show(100, False)
-        table_df.unpersist()
+        dataframe_writer.write_to_table(table_quality_detail, self.data_stack_table_quality_detail, partition_columns=["partition_date", "table"])
+        table_quality_detail.show(100, False)
 
+        table_quality_summary = (
+            table_quality_detail
+            .groupby("catalog", "database", "table", "partition_date")
+            .agg(
+                (count_if((col("metric_name") == "total_rows") & (col("metric_value") == "0")) == 0).alias("table_not_empty"),
+                (count_if(col("metric_name").like("%_isnull_count") & (col("metric_value") != "0")) == 0).alias("not_null_passed"),
+                (count_if(col("metric_name").like("%_is_unique") & (col("metric_value") != "true")) == 0).alias("unique_passed")
+            )
+            .withColumn(
+                "quality_type",
+                when(col("table_not_empty") & col("not_null_passed") & col("unique_passed"), lit(QualityType.GOLD.value))
+                .when(col("table_not_empty"), lit(QualityType.SILVER.value))
+                .otherwise(lit(QualityType.BRONZE.value))
+            )
+            .drop("table_not_empty", "not_null_passed", "unique_passed")
+        )
+
+        dataframe_writer.write_to_table(table_quality_summary, self.data_stack_table_quality_summary, partition_columns=["partition_date", "table"])
+        table_quality_summary.show(100, False)
+        table_df.unpersist()
 
         QualityChecker._data_asset_qualities[table.name] = table_quality
         logging.info(f"Table {table.name}'s quality is {table_quality}")
