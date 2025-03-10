@@ -1,5 +1,12 @@
 import logging
 
+def _setup_spark():
+    from data_stack.models.job import base_job
+    from data_warehouse.utils import spark_util
+
+    base_job.Job.spark = spark_util.create_spark_session()
+
+
 if __name__ == '__main__':
 
     from data_stack.governance.lineage import data_lineage
@@ -8,9 +15,11 @@ if __name__ == '__main__':
     from data_stack.runner.job_runner import run_job
     from data_warehouse import registration
 
+    _setup_spark()
+
     registration.register_all()
-    run_job("ods_stock_info_s_d")
-    run_job("ods_stock_market_s_d")
+    # run_job("ods_stock_info_s_d")
+    # run_job("ods_stock_market_s_d")
     run_job("dwd_stock_market_s_d")
 
     # check governance result

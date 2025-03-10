@@ -17,5 +17,4 @@ def init_logging():
     root.addHandler(handler)
     root.setLevel(logging.INFO)
 
-
 init_logging()

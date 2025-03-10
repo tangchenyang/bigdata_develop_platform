@@ -1,6 +1,8 @@
 import logging
 from typing import List
 
+from pyspark.sql import SparkSession
+
 from data_stack.governance.quality.quality_checker import QualityChecker
 from data_stack.models.data_asset.base_data_asset import DataAsset
 
@@ -10,12 +12,11 @@ class Job:
     inputs: List[DataAsset] = None
     output: DataAsset = None
 
+    spark: SparkSession = None
+
     def __init__(self):
         if self.name is None:
             self.name = self.__class__.__name__ # todo to snake
-
-        from data_stack.utils import spark_util
-        self.spark = spark_util.create_spark_session()
 
     def __str__(self):
         return f"[Job: {self.name}]"
