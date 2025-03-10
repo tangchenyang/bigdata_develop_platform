@@ -1,19 +1,18 @@
 from data_stack.meta import job_meta, data_meta
-from data_warehouse.jobs.dwd.dwd_stock_market_s_d import DwdStockMarketSD
-from data_warehouse.jobs.ods.ods_stock_market_s_d import OdsStockMarketSD
-from data_warehouse.jobs.ods.ods_stock_info_s_d import OdsStockInfoSD
-from data_warehouse.tables import tables
+from data_warehouse.layers.dwd.dwd_stock_market_s_d import DwdStockMarketSDJob, dwd_stock_market_s_d
+from data_warehouse.layers.ods.ods_stock_info_s_d import OdsStockInfoSDJob, ods_stock_info_s_d
+from data_warehouse.layers.ods.ods_stock_market_s_d import OdsStockMarketSDJob, ods_stock_market_s_d
 
 jobs = [
-    OdsStockMarketSD(),
-    DwdStockMarketSD(),
-    OdsStockInfoSD()
+    OdsStockMarketSDJob(),
+    DwdStockMarketSDJob(),
+    OdsStockInfoSDJob()
 ]
 
 data_assets = [
-    tables.ods_stock_market_s_d,
-    tables.dwd_stock_market_s_d,
-    tables.ods_stock_info_s_d,
+    ods_stock_market_s_d,
+    dwd_stock_market_s_d,
+    ods_stock_info_s_d,
 ]
 
 
