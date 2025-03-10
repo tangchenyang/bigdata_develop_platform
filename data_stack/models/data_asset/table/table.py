@@ -1,5 +1,7 @@
 import logging
+from typing import Union
 
+from data_stack.governance.quality import DataQualityRule
 from data_stack.models.data_asset.asset_type import AssetType
 from data_stack.models.data_asset.base_data_asset import DataAsset
 from data_stack.sugar import EnumSugar
@@ -28,11 +30,13 @@ class FieldType(EnumSugar):
 
 
 class TableField:
-    def __init__(self, name: str, type: str, comment: str = None, rules: list[str] = None):
+    def __init__(self, name: str, type: str, comment: str = None, rules: Union[list[DataQualityRule], list[str]] = None):
         self.name = name
         self.type = type
         self.comment = comment
-        self.rules = rules
+
+        _enum_rules = [DataQualityRule.valueOf(rule) for rule in rules if isinstance(rule, str)] if rules else None
+        self.rules = _enum_rules
 
 
 class TableSchema:

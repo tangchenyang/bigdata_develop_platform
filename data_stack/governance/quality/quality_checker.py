@@ -3,9 +3,9 @@ from datetime import date
 from typing import Dict
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import count_if, count, lit, count_distinct, col, max as f_max, when
+from pyspark.sql.functions import count_if, count, lit, count_distinct, col, max as f_max, when, nvl
 
-from data_stack.governance.quality.quality_type import QualityType
+from data_stack.governance.quality import QualityType, DataQualityRule
 from data_stack.models.data_asset.base_data_asset import DataAsset
 from data_stack.models.data_asset.file.file import File
 from data_stack.models.data_asset.table.table import Table, SysTable, Database, Catalog, TableSchema, TableField, TableEngine
@@ -96,14 +96,15 @@ class TableQualityChecker(QualityChecker):
         table_quality = QualityType.BRONZE.value
         for field in table.schema.fields:
             for rule in field.rules:
-                if rule == "Not Null":
-                    select_expr.append(count_if(table_df[field.name].isNull()).cast("string").alias(f"{field.name}_isnull_rows"))
-                elif rule == "Unique":
+                metric_name = f"{field.name}_{rule.value}"
+                if rule == DataQualityRule.NOT_NULL:
+                    select_expr.append(count_if(nvl(table_df[field.name], lit("")) == lit("")).cast("string").alias(metric_name))
+                elif rule == DataQualityRule.UNIQUE:
                     select_expr.append(
-                        (count_distinct(table_df[field.name]) == count(lit(1))).cast("string").alias(f"{field.name}_is_unique")
+                        (count_distinct(table_df[field.name]) == count(lit(1))).cast("string").alias(metric_name)
                     )
                 else:
-                    raise Exception(f"Unsupported rule {rule}")
+                    raise Exception(f"Unsupported rule {rule.value}")
 
         check_result_df = table_df.select(*select_expr)
 
@@ -112,7 +113,7 @@ class TableQualityChecker(QualityChecker):
 
         table_quality_detail = check_result_df.unpivot(
             ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value"
-        )
+        )  # todo try to support Drill-Down for each metric
         from data_stack.utils import dataframe_writer
         dataframe_writer.write_to_table(table_quality_detail, self.data_stack_table_quality_detail, partition_columns=["partition_date", "table"])
 
