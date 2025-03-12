@@ -5,7 +5,11 @@ docker pull tangchenyang/spark:v1.0
 ```
 ## 启动容器
 ```shell
-docker run -itd --privileged --name spark -p 9870:9870 -p 8088:8088 -p 4040:4040 -p 10000:10000 tangchenyang/spark:v1.0
+docker run -itd --privileged --name spark \
+-p 9870:9870 -p 8088:8088 -p 8042:8042 \
+-p 4040:4040 -p 15002:15002 \
+-p 10000:10000 \
+tangchenyang/spark:v1.1
 ```
 ## 验证服务
 ### 进入容器
@@ -64,8 +68,8 @@ yarn application --list --appStates ALL
 ### Hive
 #### Hive 命令 Example
 ```shell
-hive -e "CREATE database test_db";
-hive -e "SHOW DATABASES";
+beeline -u jdbc:hive2://localhost:10000 -e "CREATE database test_db";
+beeline -u jdbc:hive2://localhost:10000 -e "SHOW DATABASES";
 ```
 ### Spark
 #### Spark SQL Example
@@ -78,7 +82,7 @@ spark-submit \
   --class org.apache.spark.examples.SparkPi \
   --master yarn \
   --deploy-mode client \
-  ${SPARK_HOME}/examples/jars/spark-examples_2.12-3.5.1.jar \
+  ${SPARK_HOME}/examples/jars/spark-examples_2.12-3.5.5.jar \
   1000
 ```
 

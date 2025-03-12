@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
 USER root
 # ssh login without password
@@ -35,6 +35,7 @@ ADD hadoop-config/hadoop-env.sh $HADOOP_HOME/etc/hadoop/hadoop-env.sh
 RUN hdfs namenode -format
 ## expose YARN port
 EXPOSE 8088
+EXPOSE 8042
 ## expose HDFS port
 EXPOSE 9870
 
@@ -44,11 +45,11 @@ RUN apt install -y mysql-server
 ADD hive-config/mysql-change-password.sh /root/software/
 RUN bash /root/software/mysql-change-password.sh
 ## install Hive
-RUN wget https://mirrors.tuna.tsinghua.edu.cn/apache/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz -P /root/install_packages/ && \
-    tar -zxvf /root/install_packages/apache-hive-3.1.3-bin.tar.gz -C /root/software/ && \
-    rm -f /root/install_packages/apache-hive-3.1.3-bin.tar.gz
+RUN wget https://mirrors.tuna.tsinghua.edu.cn/apache/hive/hive-4.0.1/apache-hive-4.0.1-bin.tar.gz -P /root/install_packages/ && \
+    tar -zxvf /root/install_packages/apache-hive-4.0.1-bin.tar.gz -C /root/software/ && \
+    rm -f /root/install_packages/apache-hive-4.0.1-bin.tar.gz
 ## set env
-ENV HIVE_HOME /root/software/apache-hive-3.1.3-bin
+ENV HIVE_HOME /root/software/apache-hive-4.0.1-bin
 ENV PATH $PATH:$HIVE_HOME/bin
 ## configure Hive
 ADD hive-config/hive-site.xml $HIVE_HOME/conf/hive-site.xml
@@ -62,31 +63,19 @@ RUN wget https://downloads.lightbend.com/scala/2.12.19/scala-2.12.19.tgz -P /roo
     tar -zxvf /root/install_packages/scala-2.12.19.tgz -C /root/software/ && \
     rm -f /root/install_packages/scala-2.12.19.tgz
 ## install Spark
-RUN wget https://mirrors.tuna.tsinghua.edu.cn/apache/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -P /root/install_packages/ && \
-    tar -zxvf /root/install_packages/spark-3.5.1-bin-hadoop3.tgz -C /root/software/ && \
-    rm -f /root/install_packages/spark-3.5.1-bin-hadoop3.tgz
+RUN wget https://mirrors.tuna.tsinghua.edu.cn/apache/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz -P /root/install_packages/ && \
+    tar -zxvf /root/install_packages/spark-3.5.5-bin-hadoop3.tgz -C /root/software/ && \
+    rm -f /root/install_packages/spark-3.5.5-bin-hadoop3.tgz
 ## set env
 ENV SCALA_HOME /root/software/scala-2.12.19
-ENV SPARK_HOME /root/software/spark-3.5.1-bin-hadoop3
-ENV PATH $PATH:$SCALA_HOME/bin:$SPARK_HOME/bin
+ENV SPARK_HOME /root/software/spark-3.5.5-bin-hadoop3
+ENV PATH $PATH:$SCALA_HOME/bin:$SPARK_HOME/bin:$SPARK_HOME/sbin
 ## configure Spark
 ADD spark-config/spark-env.sh $SPARK_HOME/conf/spark-env.sh
 ADD spark-config/hive-site.xml $SPARK_HOME/conf/hive-site.xml
 ## expose Spark port
 EXPOSE 4040
-
-# setup Sqoop
-## install Sqoop
-RUN wget https://archive.apache.org/dist/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz -P /root/install_packages/ && \
-    tar -zxvf /root/install_packages/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz -C /root/software/ && \
-    rm -f /root/install_packages/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz
-## set env
-ENV SQOOP_HOME /root/software/sqoop-1.4.7.bin__hadoop-2.6.0
-ENV PATH $PATH:$SQOOP_HOME/bin
-## configure Sqoop
-ADD sqoop-config/sqoop-env.sh $SQOOP_HOME/conf/sqoop-env.sh
-RUN wget -P ${SQOOP_HOME}/lib https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar && \
-    wget -P ${SQOOP_HOME}/lib https://jdbc.postgresql.org/download/postgresql-42.5.4.jar
+EXPOSE 15002
 
 ADD bootstrap.sh /root/software/
 
