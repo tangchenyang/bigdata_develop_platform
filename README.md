@@ -1,7 +1,7 @@
 # 安装 Spark 集群
 ## 拉取镜像
 ```shell
-docker pull tangchenyang/spark:v1.0
+docker pull tangchenyang/spark:v1.1
 ```
 ## 启动容器
 ```shell
