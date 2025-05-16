@@ -30,12 +30,12 @@ class FieldType(EnumSugar):
 
 
 class TableField:
-    def __init__(self, name: str, type: str, comment: str = None, rules: Union[list[DataQualityRule], list[str]] = None):
+    def __init__(self, name: str, type: str, comment: str = None, rules: list[Union[DataQualityRule, str]] = None):
         self.name = name
         self.type = type
         self.comment = comment
 
-        _enum_rules = [DataQualityRule.valueOf(rule) for rule in rules if isinstance(rule, str)] if rules else None
+        _enum_rules = [DataQualityRule.valueOf(rule) for rule in rules if isinstance(rule, str)] if rules else []
         self.rules = _enum_rules
 
 
@@ -62,7 +62,7 @@ class TableType(EnumSugar):
     DWD = "dwd"
     DWS = "dws"
     ADS = "ads"
-    sys = "sys"
+    SYS = "sys"
 
 
 
@@ -138,4 +138,4 @@ class AdsTable(Table):
     table_type = TableType.ADS
 
 class SysTable(Table):
-    table_type = TableType.sys
+    table_type = TableType.SYS

@@ -48,14 +48,17 @@ class TableQualityChecker(QualityChecker):
         name="data_stack_table_quality_detail",
         database=Database.SYS,
         catalog=Catalog.ICEBERG_CATALOG,
-        schema=TableSchema([
-            TableField(name="catalog", type="STRING", comment=""),
-            TableField(name="database", type="STRING", comment=""),
-            TableField(name="table", type="STRING", comment=""),
-            TableField(name="partition_date", type="STRING", comment=""),
-            TableField(name="metric_name", type="STRING", comment=""),
-            TableField(name="metric_value", type="STRING", comment=""),
-        ]),
+        schema=TableSchema(
+            fields=[
+                TableField(name="catalog", type="STRING", comment=""),
+                TableField(name="database", type="STRING", comment=""),
+                TableField(name="table", type="STRING", comment=""),
+                TableField(name="partition_date", type="STRING", comment=""),
+                TableField(name="metric_name", type="STRING", comment=""),
+                TableField(name="metric_value", type="STRING", comment=""),
+            ],
+            partition_fields=["partition_date", "table"]
+        ),
         engine=TableEngine.ICEBERG
     )
 
@@ -63,13 +66,16 @@ class TableQualityChecker(QualityChecker):
         name="data_stack_table_quality_summary",
         database=Database.SYS,
         catalog=Catalog.ICEBERG_CATALOG,
-        schema=TableSchema([
-            TableField(name="catalog", type="STRING", comment=""),
-            TableField(name="database", type="STRING", comment=""),
-            TableField(name="table", type="STRING", comment=""),
-            TableField(name="partition_date", type="STRING", comment=""),
-            TableField(name="quality_type", type="STRING", comment="")
-        ]),
+        schema=TableSchema(
+            fields=[
+                TableField(name="catalog", type="STRING", comment=""),
+                TableField(name="database", type="STRING", comment=""),
+                TableField(name="table", type="STRING", comment=""),
+                TableField(name="partition_date", type="STRING", comment=""),
+                TableField(name="quality_type", type="STRING", comment="")
+            ],
+            partition_fields=["partition_date", "table"]
+        ),
         engine=TableEngine.ICEBERG
     )
 
@@ -86,10 +92,13 @@ class TableQualityChecker(QualityChecker):
             lit(table.name).alias("table"),
             count(lit(1)).cast("string").alias("total_rows")
         ]
+
+        current_date = date.today().strftime("%Y-%m-%d")  # todo consider pass from execution params
         if table.schema.partition_fields and "partition_date" in table.schema.partition_fields:
-            current_date = date.today().strftime("%Y-%m-%d")  # todo consider pass from execution params
             table_df = table_df.filter(col("partition_date") == current_date)
             select_expr.append(f_max("partition_date").cast("string").alias("partition_date"))
+        else:
+            select_expr.append(lit(current_date).alias("partition_date"))
 
         table_df.cache()
 
@@ -115,7 +124,7 @@ class TableQualityChecker(QualityChecker):
             ids=id_columns, values=rest_columns, variableColumnName="metric_name", valueColumnName="metric_value"
         )  # todo try to support Drill-Down for each metric
         from data_stack.utils import dataframe_writer
-        dataframe_writer.write_to_table(table_quality_detail, self.data_stack_table_quality_detail, partition_columns=["partition_date", "table"])
+        dataframe_writer.write_to_table(table_quality_detail, self.data_stack_table_quality_detail)
 
         table_quality_summary = (
             table_quality_detail
@@ -134,7 +143,7 @@ class TableQualityChecker(QualityChecker):
             .drop("table_not_empty", "not_null_passed", "unique_passed")
         )
 
-        dataframe_writer.write_to_table(table_quality_summary, self.data_stack_table_quality_summary, partition_columns=["partition_date", "table"])
+        dataframe_writer.write_to_table(table_quality_summary, self.data_stack_table_quality_summary)
         table_df.unpersist()
 
         QualityChecker._data_asset_qualities[table.name] = table_quality

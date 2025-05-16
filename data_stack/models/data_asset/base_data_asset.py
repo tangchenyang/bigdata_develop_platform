@@ -15,7 +15,7 @@ class DataAsset:
         self.description = description
 
     def __str__(self):
-        return f"[{self.asset_type.name}: {self.name}]"
+        return f"{self.asset_type.name}-{self.name}"
 
     def __repr__(self):
-        return f"[{self.asset_type.name}: {self.name}]"
+        return self.__str__()

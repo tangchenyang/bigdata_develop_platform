@@ -18,7 +18,7 @@ class EnumSugar(enum.Enum):
     @classmethod
     def valueOf(cls, value):
         for member in cls:
-            if member.value == value:
+            if member.value.lower() == value.lower():
                 return member
         raise ValueError(f"{value} is not a valid value of {cls.__name__}")
 
