@@ -1,5 +1,8 @@
 import logging
+import os
 
+PROJECT_DIR = os.path.abspath(__file__).split("bigdata_develop_platform")[0] + "bigdata_develop_platform" # todo
+DW_DIR = os.path.join(PROJECT_DIR, "data_warehouse")
 
 def init_logging():
     print(f"Initializing logging, level: INFO")

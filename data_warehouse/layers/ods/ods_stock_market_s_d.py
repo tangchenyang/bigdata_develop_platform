@@ -26,6 +26,7 @@ ods_stock_market_s_d = OdsTable(
             TableField("turnover", "DOUBLE", "换手率", [DataQualityRule.NOT_NULL]),
             TableField("stock_code", "DOUBLE", "股票代码", [DataQualityRule.NOT_NULL]),
             TableField("ingest_time", "DOUBLE", "采集时间", [DataQualityRule.NOT_NULL]),
+            TableField("partition_date", "STRING", "分区日期"),
         ],
         partition_fields=[
             "partition_date"
@@ -54,6 +55,6 @@ class OdsStockMarketSDJob(Job):
         stock_df = reduce(lambda df1, df2: df1.union(df2), stock_dfs)
 
         from data_stack.utils import dataframe_writer
-        dataframe_writer.write_to_table(stock_df, self.output, partition_columns=["partition_date"])
+        dataframe_writer.write_to_table(stock_df, self.output)
         logging.info(f"Saved to {self.output}")
 

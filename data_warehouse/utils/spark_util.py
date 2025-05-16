@@ -3,12 +3,12 @@ import os.path
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 
+from data_warehouse import DW_DIR
+
 SPARK_COMPACT_VERSION = "3.5"  # todo move to a better place
 ICEBERG_VERSION = "1.8.1"
 SCALA_COMPACT_VERSION = "2.12"
 
-PROJECT_DIR = os.path.abspath(__file__).split("bigdata_develop_platform")[0] + "bigdata_develop_platform" # todo
-DW_DIR = os.path.join(PROJECT_DIR, "data_warehouse")
 
 def _build_dependency_coordinators():
     deps = [

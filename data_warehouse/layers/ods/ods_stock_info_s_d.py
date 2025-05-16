@@ -20,6 +20,7 @@ ods_stock_info_s_d = OdsTable(
             TableField("industry", "STRING", "所属行业", [DataQualityRule.NOT_NULL]),
             TableField("listing_date", "STRING", "上市日期", [DataQualityRule.NOT_NULL]),
             TableField("ingest_time", "TIMESTAMP", "采集时间", [DataQualityRule.NOT_NULL]),
+            TableField("partition_date", "STRING", "分区日期"),
         ],
         partition_fields=[
             "partition_date"
@@ -46,7 +47,7 @@ class OdsStockInfoSDJob(Job):
 
         from data_stack.utils import dataframe_writer
         stock_info_df = stock_info_df.withColumn("partition_date", expr("TO_DATE(ingest_time)"))
-        dataframe_writer.write_to_table(stock_info_df, self.output, partition_columns=["partition_date"])
+        dataframe_writer.write_to_table(stock_info_df, self.output)
 
         logging.info(f"Saved to {self.output}")
 

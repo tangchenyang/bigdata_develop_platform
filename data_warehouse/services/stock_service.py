@@ -85,5 +85,6 @@ def get_all_stock_list():
     all_stock = pd.concat(objs=[stock_sh, stock_sz, stock_bj], ignore_index=True)
     all_stock['ingest_time'] = datetime.now(tz=pytz.UTC)
     all_stock.columns = ["stock_exchange", "stock_code", "stock_name", "company_name", "industry", "listing_date", "ingest_time"]
+    all_stock['listing_date'] = all_stock['listing_date'].astype(str)
     return all_stock
 
