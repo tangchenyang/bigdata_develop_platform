@@ -8,7 +8,7 @@ from data_warehouse.layers.dwd.dwd_stock_market_s_d import dwd_stock_market_s_d
 dws_stock_market_s_d_schema = TableSchema(
     fields=[
         TableField("date", "DATE", "日期", ["NOT_NULL"]),
-        TableField("stock_code", "STRING", "股票代码", ["NOT_NULL", "UNIQUE"]),
+        TableField("stock_code", "STRING", "股票代码", ["NOT_NULL"]),
         TableField("stock_name", "STRING", "股票名称", ["NOT_NULL"]),
         TableField("stock_exchange", "STRING", "证券交易所", ["NOT_NULL"]),
         TableField("company_name", "STRING", "公司名称", ["NOT_NULL"]),

@@ -19,8 +19,8 @@ if __name__ == '__main__':
 
     registration.register_all()
     run_job("ods_stock_info_s_d")
-    run_job("dim_stock")
     run_job("ods_stock_market_s_d")
+    run_job("dim_stock")
     run_job("dwd_stock_market_s_d")
     run_job("dws_stock_market_s_d")
     run_job("ads_stock_boundary_s_d")
