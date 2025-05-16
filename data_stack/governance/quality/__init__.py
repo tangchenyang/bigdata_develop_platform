@@ -1,10 +1,10 @@
 from data_stack.sugar import EnumSugar
 
 
-class QualityType(EnumSugar):
-    GOLD = "gold"
-    SILVER = "silver"
-    BRONZE = "bronze"
+class QualityLevel(EnumSugar):
+    A = "A"
+    B = "B"
+    C = "C"
 
 
 class DataQualityRule(EnumSugar):

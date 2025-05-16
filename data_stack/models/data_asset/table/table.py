@@ -35,7 +35,8 @@ class TableField:
         self.type = type
         self.comment = comment
 
-        _enum_rules = [DataQualityRule.valueOf(rule) for rule in rules if isinstance(rule, str)] if rules else []
+        rules = rules or []
+        _enum_rules = [DataQualityRule.valueOf(rule) if isinstance(rule, str) else rule for rule in rules]
         self.rules = _enum_rules
 
 

@@ -5,7 +5,7 @@ from typing import Dict
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import count_if, count, lit, count_distinct, col, max as f_max, when, nvl
 
-from data_stack.governance.quality import QualityType, DataQualityRule
+from data_stack.governance.quality import QualityLevel, DataQualityRule
 from data_stack.models.data_asset.base_data_asset import DataAsset
 from data_stack.models.data_asset.file.file import File
 from data_stack.models.data_asset.table.table import Table, SysTable, Database, Catalog, TableSchema, TableField, TableEngine
@@ -14,7 +14,7 @@ from data_stack.models.data_asset.table.table import Table, SysTable, Database, 
 class QualityChecker:
 
     # todo save to table or some where
-    _data_asset_qualities: Dict[str, QualityType] = {}
+    _data_asset_qualities: Dict[str, QualityLevel] = {}
 
     def __init__(self, spark: SparkSession):
         self.spark = spark
@@ -31,7 +31,7 @@ class QualityChecker:
 
 
     @staticmethod
-    def store_qualities(data_asset_name: str, data_asset_quality: QualityType):
+    def store_qualities(data_asset_name: str, data_asset_quality: QualityLevel):
         """
         :param data_asset_name:
         :param data_asset_quality:
@@ -72,7 +72,7 @@ class TableQualityChecker(QualityChecker):
                 TableField(name="database", type="STRING", comment=""),
                 TableField(name="table", type="STRING", comment=""),
                 TableField(name="partition_date", type="STRING", comment=""),
-                TableField(name="quality_type", type="STRING", comment="")
+                TableField(name="quality_level", type="STRING", comment="")
             ],
             partition_fields=["partition_date", "table"]
         ),
@@ -102,15 +102,14 @@ class TableQualityChecker(QualityChecker):
 
         table_df.cache()
 
-        table_quality = QualityType.BRONZE.value
+        table_quality = QualityLevel.C.value
         for field in table.schema.fields:
             for rule in field.rules:
-                metric_name = f"{field.name}_{rule.value}"
                 if rule == DataQualityRule.NOT_NULL:
-                    select_expr.append(count_if(nvl(table_df[field.name], lit("")) == lit("")).cast("string").alias(metric_name))
+                    select_expr.append(count_if(nvl(table_df[field.name], lit("")) == lit("")).cast("string").alias(f"{field.name}_isnull_count"))
                 elif rule == DataQualityRule.UNIQUE:
                     select_expr.append(
-                        (count_distinct(table_df[field.name]) == count(lit(1))).cast("string").alias(metric_name)
+                        (count_distinct(table_df[field.name]) == count(lit(1))).cast("string").alias(f"{field.name}_is_unique")
                     )
                 else:
                     raise Exception(f"Unsupported rule {rule.value}")
@@ -135,10 +134,10 @@ class TableQualityChecker(QualityChecker):
                 (count_if(col("metric_name").like("%_is_unique") & (col("metric_value") != "true")) == 0).alias("unique_passed")
             )
             .withColumn(
-                "quality_type",
-                when(col("table_not_empty") & col("not_null_passed") & col("unique_passed"), lit(QualityType.GOLD.value))
-                .when(col("table_not_empty"), lit(QualityType.SILVER.value))
-                .otherwise(lit(QualityType.BRONZE.value))
+                "quality_level",
+                when(col("table_not_empty") & col("not_null_passed") & col("unique_passed"), lit(QualityLevel.A.value))
+                .when(col("table_not_empty"), lit(QualityLevel.B.value))
+                .otherwise(lit(QualityLevel.C.value))
             )
             .drop("table_not_empty", "not_null_passed", "unique_passed")
         )
@@ -156,7 +155,7 @@ class FileQualityChecker(QualityChecker):
         :param file:
         :return:
         """
-        file_quality = QualityType.BRONZE.value
+        file_quality = QualityLevel.C.value
         QualityChecker._data_asset_qualities[file.name] = file_quality
         logging.info(f"File {file.name}'s quality is {file_quality}")
         return None  # todo check more
