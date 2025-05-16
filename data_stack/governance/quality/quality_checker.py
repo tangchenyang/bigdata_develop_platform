@@ -106,10 +106,10 @@ class TableQualityChecker(QualityChecker):
         for field in table.schema.fields:
             for rule in field.rules:
                 if rule == DataQualityRule.NOT_NULL:
-                    select_expr.append(count_if(nvl(table_df[field.name], lit("")) == lit("")).cast("string").alias(f"{field.name}_isnull_count"))
+                    select_expr.append(count_if(nvl(table_df[field.name], lit("")) == lit("")).cast("string").alias(f"{field.name}_null_rows"))
                 elif rule == DataQualityRule.UNIQUE:
                     select_expr.append(
-                        (count_distinct(table_df[field.name]) == count(lit(1))).cast("string").alias(f"{field.name}_is_unique")
+                        (count_distinct(table_df[field.name]) == count(lit(1))).cast("string").alias(f"{field.name}_unique")
                     )
                 else:
                     raise Exception(f"Unsupported rule {rule.value}")
@@ -130,8 +130,8 @@ class TableQualityChecker(QualityChecker):
             .groupby("catalog", "database", "table", "partition_date")
             .agg(
                 (count_if((col("metric_name") == "total_rows") & (col("metric_value") == "0")) == 0).alias("table_not_empty"),
-                (count_if(col("metric_name").like("%_isnull_count") & (col("metric_value") != "0")) == 0).alias("not_null_passed"),
-                (count_if(col("metric_name").like("%_is_unique") & (col("metric_value") != "true")) == 0).alias("unique_passed")
+                (count_if(col("metric_name").like("%_null_rows") & (col("metric_value") != "0")) == 0).alias("not_null_passed"),
+                (count_if(col("metric_name").like("%_unique") & (col("metric_value") != "true")) == 0).alias("unique_passed")
             )
             .withColumn(
                 "quality_level",
