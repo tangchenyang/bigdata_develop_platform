@@ -69,6 +69,8 @@ class TableType(EnumSugar):
 
 class Table(DataAsset):
     asset_type = AssetType.TABLE
+    table_type: TableType = None
+
 
     def __init__(self,
                  name: str,

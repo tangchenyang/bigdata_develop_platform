@@ -7,7 +7,7 @@ registered_data_assets: Dict[str, DataAsset] = {}
 
 def register_data_asset(data_asset: DataAsset):
     if data_asset.name in registered_data_assets:
-        raise ValueError(f"Data asset {data_asset.name} already registered")
+        logging.warning(f"Data asset {data_asset.name} already registered")
     registered_data_assets[data_asset.name] = data_asset
 
     logging.info(f"Registered data asset {data_asset.name}")
